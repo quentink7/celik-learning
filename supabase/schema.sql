@@ -24,9 +24,10 @@ drop policy if exists "modifier sa progression" on public.progress;
 create policy "modifier sa progression" on public.progress
   for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
--- Garde-fou : une progression ne peut pas dépasser 200 Ko (évite les abus).
+-- Garde-fou : une progression ne peut pas dépasser 64 Ko (évite qu'un robot remplisse la base ;
+-- 16 brouillons de code tiennent largement dedans).
 alter table public.progress drop constraint if exists progress_state_size;
-alter table public.progress add constraint progress_state_size check (pg_column_size(state) < 200000);
+alter table public.progress add constraint progress_state_size check (pg_column_size(state) < 65536);
 
 -- Pratique pour toi (admin) : nombre d'inscrits et de leçons terminées par cours.
 -- À lancer dans le SQL Editor quand tu veux voir tes statistiques :

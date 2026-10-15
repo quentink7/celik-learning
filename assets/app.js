@@ -50,6 +50,94 @@
   }
   function isDone(course, id) { const u = Store.get(course).units[id]; return !!(u && u.done); }
 
+  /* ------------------------------------------------------------------ */
+  /* Avis des élèves : une fenêtre à la fois, focus gardé dedans, Échap = plus tard */
+  /* ------------------------------------------------------------------ */
+  let fbOpen = false, siteAsked = false;
+  function openFeedback(o) {
+    if (fbOpen) return;
+    fbOpen = true;
+    const before = document.activeElement;
+    const ov = document.createElement("div");
+    ov.className = "fb-overlay";
+    ov.innerHTML = `<div class="fb" role="dialog" aria-modal="true" aria-labelledby="fb-t">
+  <b class="tag">${esc(o.tag)}</b>
+  <h2 id="fb-t">${esc(o.title)}</h2>
+  ${o.sub ? `<p class="note">${esc(o.sub)}</p>` : ""}
+  <fieldset class="fb-rate"><legend>${esc(o.question)}</legend>
+    ${[1, 2, 3, 4, 5].map(n => `<button type="button" class="fb-n" data-n="${n}" aria-pressed="false"><b>${n}</b><span>${esc(o.labels[n - 1])}</span></button>`).join("")}
+  </fieldset>
+  <label class="fb-c"><span>${esc(o.ask)}</span><textarea maxlength="500" rows="3"></textarea><small><span class="fb-count">0</span> / 500</small></label>
+  <div class="form-msg ko" hidden></div>
+  <div class="fb-actions"><button type="button" class="btn primary" data-fb="send" disabled>Envoyer mon avis</button><button type="button" class="btn ghost" data-fb="later">${esc(o.later)}</button>${o.never ? `<button type="button" class="btn ghost" data-fb="never">${esc(o.never)}</button>` : ""}</div>
+</div>`;
+    document.body.appendChild(ov);
+    const box = $(".fb", ov), ta = $("textarea", ov), send = $('[data-fb="send"]', ov), msg = $(".form-msg", ov);
+    let rating = null;
+    const close = () => { ov.remove(); fbOpen = false; document.removeEventListener("keydown", onKey, true); if (before && before.focus) try { before.focus(); } catch (e) {} };
+    const onKey = e => {
+      if (e.key === "Escape") { e.preventDefault(); later(); return; }
+      if (e.key !== "Tab") return;
+      const f = $$("button:not([disabled]), textarea", box); if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    };
+    const later = () => { try { o.onLater && o.onLater(); } catch (e) {} close(); };
+    document.addEventListener("keydown", onKey, true);
+    $$(".fb-n", ov).forEach(b => b.onclick = () => {
+      rating = +b.dataset.n;
+      $$(".fb-n", ov).forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      send.disabled = false;
+    });
+    ta.oninput = () => { $(".fb-count", ov).textContent = ta.value.length; };
+    $('[data-fb="later"]', ov).onclick = later;
+    const nv = $('[data-fb="never"]', ov); if (nv) nv.onclick = () => { Promise.resolve(o.onNever && o.onNever()).catch(() => {}); close(); };
+    send.onclick = async () => {
+      send.disabled = true; msg.hidden = true;
+      try {
+        await o.onSend(rating, ta.value.trim());
+        box.innerHTML = `<b class="tag">${esc(o.tag)}</b><h2 id="fb-t">Merci !</h2><p class="lead">Ton avis aide à rendre les cours plus clairs pour tout le monde.</p><div class="fb-actions"><button type="button" class="btn primary" data-fb="ok">Continuer</button></div>`;
+        const ok = $('[data-fb="ok"]', box); ok.onclick = close; ok.focus();
+      } catch (e) { msg.hidden = false; msg.textContent = (e && e.message) || "L'envoi n'a pas marché. Réessaie dans un instant."; send.disabled = false; }
+    };
+    const first = $(".fb-n", ov); if (first) first.focus();
+  }
+  /* Avis sur le site : demandé une fois par compte, à la prochaine visite connectée. */
+  async function maybeAskSite() {
+    if (siteAsked || fbOpen || (Store.cloud && !Store.user)) return;
+    try { if (sessionStorage.getItem("celik:fb-site-later")) return; } catch (e) {}
+    const mine = await Store.feedbackMine();
+    if (!mine || mine["site::"] || siteAsked) return;
+    siteAsked = true;
+    setTimeout(() => {
+      if (fbOpen || /^#\/connexion/.test(location.hash) || (Store.cloud && !Store.user)) { siteAsked = false; return; }
+      openFeedback({
+        tag: "Ton avis compte", title: "Que penses-tu de CELIK Learning ?", sub: "Une minute pour m'aider à améliorer le site. Merci ! — Quentin",
+        question: "Ta note pour le site", labels: ["Bof", "Moyen", "Bien", "Très bien", "Génial"],
+        ask: "Qu'est-ce que je pourrais améliorer ? (facultatif)", later: "Plus tard", never: "Non merci",
+        onSend: (r, c) => Store.feedbackSend({ kind: "site", rating: r, comment: c }),
+        onLater: () => { try { sessionStorage.setItem("celik:fb-site-later", "1"); } catch (e) {} },
+        onNever: () => Store.feedbackSend({ kind: "site", dismissed: true })
+      });
+    }, 1800);
+  }
+  /* Avis sur une leçon / un module : juste après la validation, une fois par sujet. */
+  async function askUnit(course, u) {
+    if (Store.cloud && !Store.user) return;
+    const mine = await Store.feedbackMine();
+    if (!mine || mine["unit:" + course + ":" + u.id]) return;
+    const py = course === "python";
+    setTimeout(() => openFeedback({
+      tag: py ? "Ton avis · leçon " + u.id.slice(1) : "Ton avis · " + mlLabel(u),
+      title: py ? "Cette leçon t'a aidé ?" : "Ce module t'a aidé ?", sub: u.title,
+      question: py ? "Elle t'a aidé…" : "Il t'a aidé…", labels: ["Pas du tout", "Un peu", "Moyennement", "Beaucoup", "Énormément"],
+      ask: "Qu'est-ce qui était flou ou difficile ? (facultatif)", later: "Passer",
+      onSend: (r, c) => Store.feedbackSend({ kind: "unit", course, unit_id: u.id, rating: r, comment: c }),
+      onLater: () => { Store.feedbackSend({ kind: "unit", course, unit_id: u.id, dismissed: true }).catch(() => {}); }
+    }), 1400);
+  }
+
   /* Révélation d'une réponse (bouton → encadré) */
   function wireReveals(root) {
     $$("[data-reveal]", root).forEach(btn => btn.addEventListener("click", () => {
@@ -129,6 +217,7 @@
     }
     const parts = h.split("/").filter(Boolean);
     renderHeader();
+    if (parts[0] !== "connexion") maybeAskSite();
     const needsAuth = parts[0] === "python" || parts[0] === "ml";
     if (Store.cloud && !Store.user && needsAuth) {
       try { sessionStorage.setItem("celik:after-login", "#" + h); } catch (e) {}
@@ -232,14 +321,14 @@
   <div class="tabs" role="tablist">
     <button type="button" role="tab" data-m="login" aria-selected="${mode === "login"}">Connexion</button>
     <button type="button" role="tab" data-m="signup" aria-selected="${mode === "signup"}">Inscription</button>
-    <button type="button" role="tab" data-m="magic" aria-selected="${mode === "magic"}">Lien par email</button>
+    ${CFG.emailEnabled !== false ? `<button type="button" role="tab" data-m="magic" aria-selected="${mode === "magic"}">Lien par email</button>` : ""}
   </div>
   <form class="stack" id="auth-form" novalidate>
     <div class="field"><label for="f-mail">Adresse email</label><input id="f-mail" type="email" autocomplete="email" required placeholder="toi@exemple.com"></div>
     ${mode === "login" || mode === "signup" ? `<div class="field"><label for="f-pw">Mot de passe${mode === "signup" ? " (8 caractères minimum)" : ""}</label><input id="f-pw" type="password" autocomplete="${mode === "signup" ? "new-password" : "current-password"}" required minlength="${mode === "signup" ? 8 : 1}"></div>` : ""}
     <div id="auth-msg" class="form-msg" hidden></div>
     <button class="btn primary block" type="submit">${mode === "signup" ? "Créer mon compte" : mode === "magic" ? "Recevoir le lien" : mode === "reset" ? "Envoyer l'email" : "Me connecter"}</button>
-    ${mode === "login" ? `<button class="btn ghost small" type="button" data-m="reset">Mot de passe oublié ?</button>` : ""}
+    ${mode === "login" && CFG.emailEnabled !== false ? `<button class="btn ghost small" type="button" data-m="reset">Mot de passe oublié ?</button>` : ""}
     ${mode === "reset" ? `<button class="btn ghost small" type="button" data-m="login">Retour à la connexion</button>` : ""}
   </form>
 </section>
@@ -511,6 +600,7 @@
         verdict.className = "pyverdict ok"; verdict.textContent = "✓ Exercice réussi ! Leçon validée.";
         write("✓ Tous les tests passent\n", "okl");
         markDone("python", l.id); const t = $("#done-tag"); if (t) t.textContent = "✓ Exercice réussi";
+        askUnit("python", l);
       } else { verdict.className = "pyverdict no"; verdict.textContent = "✗ " + res; write("✗ " + res + "\n", "err"); }
       setRun(false);
     }
@@ -594,10 +684,10 @@ ${m.quiz && m.quiz.length ? `<section class="stack"><h2 class="section-title">Qu
       const dn = isDone("ml", m.id);
       finish.innerHTML = dn ? `<div class="done-box">✓ Module terminé${pct != null ? ` · quiz ${pct} %` : ""}${next ? ` — <a href="#/ml/${next.id}">continuer avec ${esc(next.title)}</a>` : ""}</div>`
         : `<div class="panel row" style="justify-content:space-between"><span class="note">${pct == null ? "Fais le quiz pour valider le module, ou marque-le comme terminé." : pct >= 50 ? "Quiz réussi. Tu peux valider le module." : "Score encore fragile : relis les sections ratées, ou valide quand même si tu te sens prêt."}</span><button class="btn primary" type="button" data-finish>Marquer comme terminé</button></div>`;
-      const fb = $("[data-finish]", finish); if (fb) fb.onclick = () => { markDone("ml", m.id, { score: pct }); paintFinish(pct); };
+      const fb = $("[data-finish]", finish); if (fb) fb.onclick = () => { markDone("ml", m.id, { score: pct }); paintFinish(pct); askUnit("ml", m); };
     };
     paintFinish(sc != null ? sc : null);
-    wireQuiz(root, m.quiz || [], "ml", m.id, pct => { if (pct >= 50 && !isDone("ml", m.id)) markDone("ml", m.id, { score: pct }); else Store.update("ml", s => { const u = s.units[m.id] || {}; u.score = Math.max(u.score || 0, pct); s.units[m.id] = u; }); paintFinish(pct); });
+    wireQuiz(root, m.quiz || [], "ml", m.id, pct => { if (pct >= 50 && !isDone("ml", m.id)) { markDone("ml", m.id, { score: pct }); askUnit("ml", m); } else Store.update("ml", s => { const u = s.units[m.id] || {}; u.score = Math.max(u.score || 0, pct); s.units[m.id] = u; }); paintFinish(pct); });
     $$(".demo-host[data-demo]", root).forEach(h => { const f = window.DEMO && window.DEMO[h.dataset.demo]; if (f) { try { f(h); } catch (e) { h.innerHTML = `<p class="note">La démo n'a pas pu s'afficher.</p>`; } } });
     if (location.hash.indexOf("#b") > 0) { /* ancre éventuelle */ }
   }

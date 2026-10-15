@@ -48,7 +48,7 @@ window.Store = (function () {
     sb.auth.onAuthStateChange((_evt, session) => {
       const prev = user ? user.id : null;
       user = session ? session.user : null;
-      if ((user ? user.id : null) !== prev) { Object.keys(states).forEach(k => delete states[k]); listeners.forEach(f => f(user)); }
+      if ((user ? user.id : null) !== prev) { Object.keys(states).forEach(k => delete states[k]); fbCache = null; listeners.forEach(f => f(user)); }
     });
   }
 
@@ -76,7 +76,7 @@ window.Store = (function () {
   async function magic(email) { const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect() } }); if (error) throw new Error(err(error)); }
   async function resetPassword(email) { const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect() + "#/compte" }); if (error) throw new Error(err(error)); }
   async function updatePassword(password) { const { error } = await sb.auth.updateUser({ password }); if (error) throw new Error(err(error)); }
-  async function signOut() { if (sb) await sb.auth.signOut(); user = null; Object.keys(states).forEach(k => delete states[k]); listeners.forEach(f => f(null)); }
+  async function signOut() { if (sb) await sb.auth.signOut(); user = null; fbCache = null; Object.keys(states).forEach(k => delete states[k]); listeners.forEach(f => f(null)); }
 
   /* Lecture : cache local immédiat, puis fusion avec la copie en ligne. */
   function get(course) {
@@ -112,10 +112,32 @@ window.Store = (function () {
       setStatus("saved");
     } catch (e) { setStatus("offline"); }
   }
+  /* Avis des élèves : table « feedback » (en ligne) ou navigateur (mode démo). Un avis par sujet. */
+  let fbCache = null;
+  const fbKey = r => [r.kind, r.course || "", r.unit_id || ""].join(":");
+  async function feedbackMine() {
+    if (fbCache) return fbCache;
+    if (!cloud || !user) { fbCache = lsGet(lsKey("feedback")) || {}; return fbCache; }
+    try {
+      const { data, error } = await sb.from("feedback").select("kind,course,unit_id,rating,dismissed").eq("user_id", user.id);
+      if (error) throw error;
+      fbCache = {}; (data || []).forEach(r => { fbCache[fbKey(r)] = r; });
+    } catch (e) { fbCache = null; return null; }   // en cas d'erreur réseau : on ne demande rien
+    return fbCache;
+  }
+  async function feedbackSend(r) {
+    const row = { kind: r.kind, course: r.course || "", unit_id: r.unit_id || "", rating: r.rating == null ? null : r.rating,
+      comment: String(r.comment || "").slice(0, 500), dismissed: !!r.dismissed, updated_at: new Date().toISOString() };
+    if (fbCache) fbCache[fbKey(row)] = row;
+    if (!cloud || !user) { lsSet(lsKey("feedback"), fbCache || { [fbKey(row)]: row }); return; }
+    const { error } = await sb.from("feedback").upsert(Object.assign({ user_id: user.id }, row), { onConflict: "user_id,kind,course,unit_id" });
+    if (error) throw new Error(err(error));
+  }
+
   window.addEventListener("beforeunload", () => { Object.keys(timers).forEach(c => { clearTimeout(timers[c]); push(c); }); });
 
   return {
-    cloud, init, signIn, signUp, magic, resetPassword, updatePassword, signOut, get, load, update,
+    cloud, init, signIn, signUp, magic, resetPassword, updatePassword, signOut, get, load, update, feedbackMine, feedbackSend,
     get user() { return user; },
     get status() { return saveStatus; },
     onAuth: f => listeners.add(f),
