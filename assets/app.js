@@ -1,4 +1,4 @@
-/* Application : routage, pages, rendu des cours Python et Machine Learning */
+/* Application : routage, pages, rendu des cours Python, SQL et Machine Learning */
 (function () {
   "use strict";
   const CFG = window.SITE_CONFIG || {};
@@ -14,6 +14,10 @@
   const PY = window.COURSE_PYTHON;
   const PY_LESSONS = [];
   PY.parts.forEach((p, pi) => p.lessons.forEach(l => { l.part = pi; PY_LESSONS.push(l); }));
+  const SQ = window.COURSE_SQL;
+  const SQ_LESSONS = [];
+  SQ.parts.forEach((p, pi) => p.lessons.forEach(l => { l.part = pi; SQ_LESSONS.push(l); }));
+  const CS50_WEEKS = SQ.source.weeks;
 
   const DETAIL = window.ML_DETAIL || {};
   const ML_MODS = (window.COURSE_ML_MODULES || []).map(m => {
@@ -28,7 +32,9 @@
     intro: "Pensé pour quelqu'un qui part de zéro en maths. Les modules de maths sont placés juste avant le module de ML qui en a besoin : tu n'apprends chaque outil qu'au moment où il sert. Chaque notion est expliquée simplement, puis calculée pas à pas, avec des démos à manipuler."
   };
   const mlLabel = m => (m.track === "maths" ? "Maths " : "Module ") + m.num;
-  const COURSES = { python: { meta: PY, units: PY_LESSONS }, ml: { meta: ML, units: ML_MODS } };
+  const COURSES = { python: { meta: PY, units: PY_LESSONS }, ml: { meta: ML, units: ML_MODS }, sql: { meta: SQ, units: SQ_LESSONS } };
+  const COURSE_KEYS = ["python", "ml", "sql"];
+  const isLessonCourse = c => c === "python" || c === "sql";   // cours en leçons (avec exercice), par opposition aux modules du ML
 
   /* ------------------------------------------------------------------ */
   /* Utilitaires                                                          */
@@ -127,9 +133,9 @@
     if (Store.cloud && !Store.user) return;
     const mine = await Store.feedbackMine();
     if (!mine || mine["unit:" + course + ":" + u.id]) return;
-    const py = course === "python";
+    const py = isLessonCourse(course);
     setTimeout(() => openFeedback({
-      tag: py ? "Ton avis · leçon " + u.id.slice(1) : "Ton avis · " + mlLabel(u),
+      tag: course === "python" ? "Ton avis · leçon " + u.id.slice(1) : course === "sql" ? "Ton avis · SQL leçon " + u.id.slice(1) : "Ton avis · " + mlLabel(u),
       title: py ? "Cette leçon t'a aidé ?" : "Ce module t'a aidé ?", sub: u.title,
       question: py ? "Elle t'a aidé…" : "Il t'a aidé…", labels: ["Pas du tout", "Un peu", "Moyennement", "Beaucoup", "Énormément"],
       ask: "Qu'est-ce qui était flou ou difficile ? (facultatif)", later: "Passer",
@@ -153,15 +159,15 @@
   }
 
   /* L'étoffe : un carreau tissé par leçon, une bande par cours */
-  const unitKind = (course, u) => course === "python" ? "py" : (u.track === "maths" ? "maths" : "ml");
-  const unitLabel = (course, u, i) => course === "python" ? `Python · leçon ${i + 1}` : (u.track === "maths" ? `Maths ${u.num}` : `ML · module ${u.num}`);
+  const unitKind = (course, u) => course === "python" ? "py" : course === "sql" ? "sq" : (u.track === "maths" ? "maths" : "ml");
+  const unitLabel = (course, u, i) => course === "python" ? `Python · leçon ${i + 1}` : course === "sql" ? `SQL · leçon ${i + 1}` : (u.track === "maths" ? `Maths ${u.num}` : `ML · module ${u.num}`);
   function cellsHtml(course, opts) {
     opts = opts || {};
     const units = COURSES[course].units, st = Store.get(course), nxt = nextUnit(course);
     const started = Object.keys(st.units).length > 0 || !!st.last;
     return units.map((u, i) => {
       const done = !!(st.units[u.id] && st.units[u.id].done);
-      const motif = "motif-" + ((i * 5 + (course === "ml" ? 3 : 0)) % 6);
+      const motif = "motif-" + ((i * 5 + (course === "ml" ? 3 : course === "sql" ? 1 : 0)) % 6);
       const isNext = opts.showNext !== false && started && !done && nxt && nxt.id === u.id;
       return `<a class="cell ${unitKind(course, u)} ${motif}${done ? "" : " todo"}${isNext ? " next" : ""}" style="--i:${(opts.offset || 0) + i}" href="#/${course}/${u.id}" data-cap="${esc(unitLabel(course, u, i) + " · " + u.title + (done ? " · terminé" : isNext ? " · à reprendre ici" : ""))}" aria-label="${esc(unitLabel(course, u, i) + " : " + u.title + (done ? ", terminé" : ""))}"><span class="n">${i + 1}</span></a>`;
     }).join("");
@@ -179,13 +185,14 @@
   function renderHeader() {
     const u = Store.user;
     const route = location.hash || "#/";
-    const cur = route.startsWith("#/python") ? "python" : route.startsWith("#/ml") ? "ml" : "";
+    const cur = route.startsWith("#/python") ? "python" : route.startsWith("#/ml") ? "ml" : route.startsWith("#/sql") ? "sql" : "";
     $("#hdr").innerHTML = `
 <div class="topbar-in">
   <a class="brand" href="#/" aria-label="${esc(CFG.siteName)}, accueil"><span class="logo" aria-hidden="true">${"<i></i>".repeat(9)}</span>${brandName()}</a>
   <nav class="nav" aria-label="Cours">
     <a href="#/python" ${cur === "python" ? 'aria-current="page"' : ""}>Python</a>
     <a href="#/ml" ${cur === "ml" ? 'aria-current="page"' : ""}>Machine Learning</a>
+    <a href="#/sql" ${cur === "sql" ? 'aria-current="page"' : ""}>SQL</a>
   </nav>
   <div class="user-zone">
     <span id="save-chip" class="save-chip" hidden></span>
@@ -218,7 +225,7 @@
     const parts = h.split("/").filter(Boolean);
     renderHeader();
     if (parts[0] !== "connexion") maybeAskSite();
-    const needsAuth = parts[0] === "python" || parts[0] === "ml";
+    const needsAuth = COURSE_KEYS.includes(parts[0]);
     if (Store.cloud && !Store.user && needsAuth) {
       try { sessionStorage.setItem("celik:after-login", "#" + h); } catch (e) {}
       location.replace("#/connexion"); return;
@@ -227,10 +234,10 @@
     if (!parts.length) return pageHome();
     if (parts[0] === "connexion") return Store.cloud ? (Store.user ? location.replace("#/") : pageAuth()) : location.replace("#/");
     if (parts[0] === "compte") return Store.cloud && Store.user ? pageAccount() : location.replace("#/");
-    if (parts[0] === "python" || parts[0] === "ml") {
+    if (COURSE_KEYS.includes(parts[0])) {
       await Store.load(parts[0]);
       if (!parts[1]) return pageCourse(parts[0]);
-      return parts[0] === "python" ? pagePyLesson(parts[1]) : pageMlModule(parts[1]);
+      return parts[0] === "python" ? pagePyLesson(parts[1]) : parts[0] === "sql" ? pageSqlLesson(parts[1]) : pageMlModule(parts[1]);
     }
     pageNotFound();
   }
@@ -241,17 +248,19 @@
   /* ------------------------------------------------------------------ */
   async function pageHome() {
     setTitle("");
-    if (Store.user) await Promise.all([Store.load("python"), Store.load("ml")]);
+    if (Store.user) await Promise.all(COURSE_KEYS.map(k => Store.load(k)));
     const showProg = !Store.cloud || Store.user;
-    const pP = progressOf("python"), pM = progressOf("ml");
-    const startedP = pP.done > 0 || !!Store.get("python").last, startedM = pM.done > 0 || !!Store.get("ml").last;
-    const total = pP.done + pM.done;
+    const pP = progressOf("python"), pM = progressOf("ml"), pS = progressOf("sql");
+    const startedOf = k => progressOf(k).done > 0 || !!Store.get(k).last;
+    const started = COURSE_KEYS.filter(startedOf);
+    const total = pP.done + pM.done + pS.done;
+    const goOn = { python: "Continuer Python", ml: "Continuer le ML", sql: "Continuer SQL" };
     let ctas;
     if (Store.cloud && !Store.user) ctas = `<a class="btn primary" href="#/connexion">Créer mon compte gratuit</a><a class="btn" href="#/connexion">J'ai déjà un compte</a>`;
-    else if (startedP || startedM) ctas = `${startedP ? `<a class="btn primary" href="#/python/${nextUnit("python").id}">Continuer Python</a>` : ""}${startedM ? `<a class="btn ${startedP ? "" : "primary"}" href="#/ml/${nextUnit("ml").id}">Continuer le ML</a>` : ""}`;
-    else ctas = `<a class="btn primary" href="#/python/${PY_LESSONS[0].id}">Commencer par Python</a><a class="btn" href="#/ml/${ML_MODS[0].id}">Commencer le ML</a>`;
+    else if (started.length) ctas = started.map((k, i) => `<a class="btn ${i ? "" : "primary"}" href="#/${k}/${nextUnit(k).id}">${goOn[k]}</a>`).join("");
+    else ctas = `<a class="btn primary" href="#/python/${PY_LESSONS[0].id}">Commencer par Python</a><a class="btn" href="#/sql/${SQ_LESSONS[0].id}">Commencer SQL</a><a class="btn" href="#/ml/${ML_MODS[0].id}">Commencer le ML</a>`;
     const card = (key, kicker, list, facts) => {
-      const c = COURSES[key], p = progressOf(key), started = key === "python" ? startedP : startedM;
+      const c = COURSES[key], p = progressOf(key), started = startedOf(key);
       return `<a class="course ${key}" href="#/${key}">
   <span class="selvage motif-2" aria-hidden="true"></span>
   <span class="body">
@@ -268,8 +277,8 @@
 <section class="hero">
   <div class="hero-text">
     <span class="eyebrow">${esc(CFG.siteName)} · gratuit · en français</span>
-    <h1><span class="l">Apprends</span> <span class="l"><span class="t-millet">Python</span> et l'<span class="t-indigo">IA</span>,</span> <span class="l">fil après fil.</span></h1>
-    <p class="lead">Deux parcours pour vrais débutants. Chaque notion est expliquée simplement, calculée pas à pas, puis pratiquée tout de suite. Chaque leçon terminée tisse un carreau de ton étoffe.</p>
+    <h1><span class="l">Apprends</span> <span class="l"><span class="t-millet">Python</span>, <span class="t-bissap">SQL</span></span> <span class="l">et l'<span class="t-indigo">IA</span>,</span> <span class="l">fil après fil.</span></h1>
+    <p class="lead">Trois parcours pour vrais débutants. Chaque notion est expliquée simplement, calculée pas à pas, puis pratiquée tout de suite. Chaque leçon terminée tisse un carreau de ton étoffe.</p>
     <div class="row">${ctas}</div>
   </div>
   <figure class="cloth-wrap" style="margin:0">
@@ -278,14 +287,17 @@
       ${cellsHtml("python")}
       <div class="band-label"><span>Bande Machine Learning</span><span>${showProg ? pM.done + " / " + pM.total : ML_MODS.length + " modules"}</span></div>
       ${cellsHtml("ml", { offset: 16 })}
+      <div class="band-label"><span>Bande SQL</span><span>${showProg ? pS.done + " / " + pS.total : SQ_LESSONS.length + " leçons"}</span></div>
+      ${cellsHtml("sql", { offset: 32 })}
     </div>
     <figcaption class="note" id="cloth-cap"></figcaption>
-    <div class="cloth-legend"><span><i style="background:var(--millet)"></i>Python</span><span><i style="background:var(--indigo)"></i>Machine Learning</span><span><i style="background:var(--teal)"></i>Maths pour le ML</span><span><i style="background:var(--surface-2);outline:1px solid var(--line)"></i>À tisser</span></div>
+    <div class="cloth-legend"><span><i style="background:var(--millet)"></i>Python</span><span><i style="background:var(--indigo)"></i>Machine Learning</span><span><i style="background:var(--teal)"></i>Maths pour le ML</span><span><i style="background:var(--bissap)"></i>SQL</span><span><i style="background:var(--surface-2);outline:1px solid var(--line)"></i>À tisser</span></div>
   </figure>
 </section>
-<section class="courses" aria-label="Les deux parcours">
+<section class="courses" aria-label="Les trois parcours">
   ${card("python", "&gt;&gt;&gt; print(\"Bonjour\")", ["Variables, conditions, boucles, listes, fonctions", "Une console Python dans la page, rien à installer", "Exercices corrigés automatiquement", "Projet final : repérer une attaque dans des logs"], `${PY_LESSONS.length} leçons · environ ${hours(PY_LESSONS)} h`)}
   ${card("ml", "ŷ = w · x + b", ["Les idées du ML, sans jargon", "Les maths reprises depuis le début, juste à temps", "Démos à manipuler : gradient, seuil, k-means", "Un projet complet avec scikit-learn"], `${ML_MODS.length} modules dont ${ML_MODS.filter(m => m.track === "maths").length} de maths · environ ${hours(ML_MODS)} h`)}
+  ${card("sql", "SELECT * FROM clients;", ["Interroger une base : filtrer, trier, compter", "Relier les tables : JOIN, GROUP BY", "Concevoir sa base, modifier, sécuriser", "Programme aligné sur CS50 SQL (Harvard)"], `${SQ_LESSONS.length} leçons · environ ${hours(SQ_LESSONS)} h`)}
 </section>
 <section class="stack" aria-labelledby="methode">
   <h2 id="methode">Comment se déroule une leçon</h2>
@@ -360,7 +372,7 @@
 
   function pageAccount() {
     setTitle("Mon compte");
-    const p1 = progressOf("python"), p2 = progressOf("ml");
+    const p1 = progressOf("python"), p2 = progressOf("ml"), p3 = progressOf("sql");
     app().innerHTML = `
 <section class="account">
   <h1>Mon compte</h1>
@@ -369,6 +381,7 @@
     <span class="eyebrow">Progression</span>
     <div><b>Python</b>${progBar(p1)}</div>
     <div><b>Machine Learning</b>${progBar(p2)}</div>
+    <div><b>SQL</b>${progBar(p3)}</div>
   </div>
   <form class="panel stack" id="pw-form">
     <span class="eyebrow">Changer de mot de passe</span>
@@ -395,12 +408,12 @@
     setTitle(c.meta.title);
     const pad = n => String(n).padStart(2, "0");
     let body = "";
-    if (course === "python") {
+    if (isLessonCourse(course)) {
       body = c.meta.parts.map((part, pi) => `
 <section class="part"><h2><span class="pn">Partie ${pi + 1}</span>${esc(part.title)}</h2>
 <ol class="units">${part.lessons.map(l => {
-        const n = PY_LESSONS.indexOf(l) + 1, d = isDone(course, l.id);
-        return `<li class="${d ? "done" : ""}"><a href="#/python/${l.id}"><span class="ix">${pad(n)}</span><span><span class="t">${esc(l.title)}</span><span class="d">${esc(l.goal)}</span></span><span class="r">${d ? "✓ réussi" : l.minutes + " min"}</span></a></li>`;
+        const n = c.units.indexOf(l) + 1, d = isDone(course, l.id);
+        return `<li class="${d ? "done" : ""}"><a href="#/${course}/${l.id}"><span class="ix">${pad(n)}</span><span><span class="t">${esc(l.title)}</span><span class="d">${esc(l.goal)}</span></span><span class="r">${d ? "✓ réussi" : l.minutes + " min"}</span></a></li>`;
       }).join("")}</ol></section>`).join("");
     } else {
       body = `<section class="part"><h2><span class="pn">${ML_MODS.length} étapes</span>Le parcours</h2><ol class="units">${ML_MODS.map((m, i) => {
@@ -423,14 +436,20 @@
       ${progBar(p)}
       <div class="row"><a class="btn primary" href="#/${course}/${nxt.id}">${p.done === 0 && !st.last ? "Commencer le cours" : p.done === p.total ? "Revoir depuis le début" : "Continuer : " + esc(nxt.title)}</a></div>
     </section>
+    ${c.meta.source ? sourceBox(c.meta.source) : ""}
     ${body}
   </div>
 </div>`;
-    wireCaption(app(), "#strip-cap", "Un carreau par " + (course === "python" ? "leçon" : "module") + ". Les carreaux pâles restent à tisser.");
+    wireCaption(app(), "#strip-cap", "Un carreau par " + (isLessonCourse(course) ? "leçon" : "module") + ". Les carreaux pâles restent à tisser.");
+  }
+
+  /* D'où vient le programme (cours SQL) */
+  function sourceBox(s) {
+    return `<aside class="box source"><b class="tag">D'où vient ce programme</b><p>Ce cours suit la progression de <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.name)}</a> (CS50 SQL), le cours d'introduction aux bases de données de l'${esc(s.org)}, par ${esc(s.authors)}, dont les supports sont publiés sous licence <a href="${esc(s.licenseUrl)}" target="_blank" rel="noopener noreferrer">${esc(s.license)}</a>. Les ${s.weeks.length} semaines de CS50 SQL (${s.weeks.map(esc).join(", ")}) sont reprises dans le même ordre, réparties en 16 leçons.</p><p>Les explications, les exemples, la base de la boutique et les exercices sont rédigés pour CELIK Learning, en français. CELIK Learning n'est pas affilié à Harvard ni à CS50.</p></aside>`;
   }
 
   /* ------------------------------------------------------------------ */
-  /* Quiz (commun aux deux cours)                                         */
+  /* Quiz (commun aux trois cours)                                        */
   /* ------------------------------------------------------------------ */
   function quizHtml(qs, key) {
     return `<div class="quiz" data-quiz="${key}">${qs.map((q, i) => q.type === "open" ? `
@@ -619,6 +638,183 @@
     cleanup = () => { stop(); clearTimeout(saveT); Store.update("python", s => { s.drafts[l.id] = code.value; }); };
     PyRuntime.load().then(() => { out.innerHTML = ""; write("Python est prêt. Écris ton code puis clique sur ▶ Exécuter.\n", "sys"); setRun(false); btn("stop").disabled = true; },
       e => { out.innerHTML = ""; write(e.message + "\n", "err"); });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Leçon SQL                                                            */
+  /* ------------------------------------------------------------------ */
+  const SQL_SHOW = 100;   // lignes affichées au plus dans l'atelier
+  /* Ce que dit SQLite après une instruction qui ne renvoie pas de lignes */
+  function sqlDoneMsg(step) {
+    const s = step.sql.replace(/^(\s|--[^\n]*\n)+/, "").toUpperCase(), n = step.changes, pl = n > 1 ? "s" : "";
+    if (/^INSERT/.test(s)) return `✓ ${n} ligne${pl} ajoutée${pl}`;
+    if (/^UPDATE/.test(s)) return `✓ ${n} ligne${pl} modifiée${pl}`;
+    if (/^DELETE/.test(s)) return `✓ ${n} ligne${pl} supprimée${pl}`;
+    if (/^CREATE\s+(TEMP\w*\s+)?TABLE/.test(s)) return "✓ Table créée";
+    if (/^CREATE\s+(TEMP\w*\s+)?VIEW/.test(s)) return "✓ Vue créée";
+    if (/^CREATE\s+(UNIQUE\s+)?INDEX/.test(s)) return "✓ Index créé";
+    if (/^CREATE\s+(TEMP\w*\s+)?TRIGGER/.test(s)) return "✓ Trigger créé";
+    if (/^DROP/.test(s)) return "✓ Supprimé";
+    if (/^ALTER/.test(s)) return "✓ Table modifiée";
+    if (/^BEGIN/.test(s)) return "Transaction ouverte";
+    if (/^(COMMIT|END)/.test(s)) return "✓ Transaction validée (COMMIT)";
+    if (/^ROLLBACK/.test(s)) return "↺ Transaction annulée (ROLLBACK) : retour à l'état d'avant le BEGIN";
+    return "✓ Instruction exécutée";
+  }
+  const sqlCell = v => v == null ? `<td class="null">NULL</td>` : `<td${typeof v === "number" ? ' class="num"' : ""}>${esc(typeof v === "number" ? Math.round(v * 1e6) / 1e6 : v instanceof Uint8Array ? "[données binaires]" : v)}</td>`;
+  function sqlTable(step, max) {
+    const rows = step.rows.slice(0, max), n = step.rows.length;
+    return `<div class="sqlres-t"><table><thead><tr>${step.columns.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(sqlCell).join("")}</tr>`).join("") || `<tr><td class="none" colspan="${step.columns.length}">Aucune ligne</td></tr>`}</tbody></table></div>
+<p class="sqlres-n">${step.more ? `Plus de ${n} lignes` : n + " ligne" + (n > 1 ? "s" : "")}${n > max ? ` · ${max} premières affichées` : ""}</p>`;
+  }
+  /* Rendu complet d'une exécution (atelier et exemples) */
+  function sqlRender(r, max) {
+    let h = r.steps.map(st => st.write ? `<p class="sqlres-msg">${esc(sqlDoneMsg(st))}</p>` : sqlTable(st, max)).join("");
+    if (!r.ok) {
+      const e = SqlRuntime.explain(r.err), many = r.steps.length > 0;
+      h += `<div class="sqlres-err"><b>Erreur${many ? ` à l'instruction ${r.errIndex + 1}` : ""}</b> : ${esc(e.msg)}${e.tip ? `<p>→ ${esc(e.tip)}</p>` : ""}</div>`;
+    }
+    if (r.ok && !r.steps.length) h = `<p class="sqlres-msg">Rien à exécuter : écris une requête.</p>`;
+    return h;
+  }
+  function schemaHtml(setup) {
+    try {
+      return SqlRuntime.schema(setup).map(t => `<div class="schema-t"><b>${esc(t.name)}</b> <span class="note">${t.n} ligne${t.n > 1 ? "s" : ""}</span><ul>${t.cols.map(c => `<li><code>${esc(c.name)}</code> <span>${esc((c.type || "").toLowerCase())}${c.pk ? " · clé primaire" : ""}</span></li>`).join("")}</ul></div>`).join("");
+    } catch (e) { return `<p class="note">Le schéma n'a pas pu s'afficher.</p>`; }
+  }
+
+  function pageSqlLesson(id) {
+    const idx = SQ_LESSONS.findIndex(l => l.id === id);
+    if (idx < 0) return pageNotFound();
+    const l = SQ_LESSONS[idx], prev = SQ_LESSONS[idx - 1], next = SQ_LESSONS[idx + 1], ex = l.exercise;
+    Store.update("sql", s => { s.last = l.id; });
+    setTitle(l.title);
+    app().innerHTML = `
+<div class="crumbs-bar"><a href="#/">Accueil</a><span>/</span><a href="#/sql">SQL</a><span>/</span><span>Leçon ${idx + 1}</span></div>
+<header class="lesson-head sq">
+  <span class="big-n" aria-hidden="true">${String(idx + 1).padStart(2, "0")}</span>
+  <span class="eyebrow">Partie ${l.part + 1} · ${esc(SQ.parts[l.part].title)} · leçon ${idx + 1} sur ${SQ_LESSONS.length}</span>
+  <h1>${esc(l.title)}</h1>
+  <div class="meta"><span>≈ ${l.minutes} min</span><span>Repère CS50 SQL : semaine ${l.cs50} « ${esc(CS50_WEEKS[l.cs50])} »</span><button type="button" class="btn ghost small" data-goto-bench>↓ Aller à l'exercice</button><span id="done-tag">${isDone("sql", l.id) ? "✓ Exercice réussi" : ""}</span></div>
+</header>
+<p class="objective"><b>Objectif</b>${esc(l.goal)}</p>
+<div class="py-layout">
+  <article class="py-text">
+    <div class="box why"><b class="tag">Pourquoi c'est utile</b>${l.why}</div>
+    ${l.sections.map(s => `<section class="stack"><h2 class="section-title">${esc(s.h)}</h2><div class="lesson">${s.html}</div></section>`).join("")}
+    <div class="box pitfall"><b class="tag">Erreurs fréquentes</b><ul>${l.pitfalls.map(p => `<li>${p}</li>`).join("")}</ul></div>
+    <div class="box remember"><b class="tag">L'essentiel à retenir</b><ul>${l.remember.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>
+    <section class="stack"><h2 class="section-title">Vérifie que tu as compris</h2>${quizHtml(l.quiz, "q-" + l.id)}</section>
+    <nav class="pager">${prev ? `<a class="btn" href="#/sql/${prev.id}">← ${esc(prev.title)}</a>` : "<span></span>"}${next ? `<a class="btn primary" href="#/sql/${next.id}">${esc(next.title)} →</a>` : `<a class="btn primary" href="#/sql">Retour au sommaire</a>`}</nav>
+  </article>
+  <aside class="bench" aria-label="Atelier">
+    <div class="task"><span class="tag">Exercice</span><div>${ex.task}</div>
+      <details class="schema"><summary>Les tables de la base</summary><div class="schema-list"><p class="note">Chargement…</p></div></details>
+      <details><summary>Un indice</summary><p>${esc(ex.hint)}</p></details>
+      <details data-sol><summary>Voir une solution</summary><p class="note">Essaie vraiment avant d'ouvrir : c'est en cherchant qu'on apprend.</p><button class="btn small" type="button" data-load-sol>Mettre la solution dans l'éditeur</button></details>
+    </div>
+    <div class="pane">
+      <div class="pane-head"><span class="t">requete.sql</span><div class="row"><button class="btn small" type="button" data-act="reset">Réinitialiser</button><button class="btn small primary" type="button" data-act="run" disabled>▶ Exécuter</button><button class="btn small check" type="button" data-act="check" disabled>✓ Vérifier</button></div></div>
+      <div class="editor"><div class="gutter">1</div><textarea class="code-area" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Éditeur de requêtes SQL"></textarea></div>
+      <div class="kbd">Ctrl/⌘ + Entrée pour exécuter · chaque exécution repart de la base d'origine</div>
+    </div>
+    <div class="pane term">
+      <div class="pane-head"><span class="t">Résultat</span><div class="row"><button class="btn small" type="button" data-act="clear">Effacer</button></div></div>
+      <div class="out sqlout" aria-live="polite"><span class="sys">Chargement de SQLite…</span></div>
+    </div>
+    <div class="pyverdict" hidden></div>
+  </aside>
+</div>`;
+    const root = app();
+    wireReveals(root);
+    wireQuiz(root, l.quiz, "sql", l.id);
+    wireSqlBench(root, l);
+    $("[data-goto-bench]", root).onclick = () => $(".bench", root).scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function wireSqlBench(root, l) {
+    const ex = Object.assign({ setup: l.setup }, l.exercise);
+    const code = $(".code-area", root), gutter = $(".gutter", root), out = $(".out", root), verdict = $(".pyverdict", root);
+    const btn = a => $(`[data-act="${a}"]`, root);
+    const st = Store.get("sql");
+    code.value = st.drafts[l.id] != null ? st.drafts[l.id] : ex.start;
+    let ready = false, saveT = null;
+    const gut = () => { gutter.textContent = Array.from({ length: code.value.split("\n").length }, (_, i) => i + 1).join("\n"); };
+    gut();
+    const save = () => { clearTimeout(saveT); saveT = setTimeout(() => Store.update("sql", s => { s.drafts[l.id] = code.value; }), 600); };
+    const setCode = v => { code.value = v; gut(); save(); };
+    code.addEventListener("input", () => { gut(); save(); });
+    code.addEventListener("scroll", () => { gutter.scrollTop = code.scrollTop; });
+    code.addEventListener("keydown", e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+      if (e.key === "Tab") { e.preventDefault(); const s = code.selectionStart; code.value = code.value.slice(0, s) + "  " + code.value.slice(code.selectionEnd); code.selectionStart = code.selectionEnd = s + 2; gut(); save(); return; }
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault(); const s = code.selectionStart, ls = code.value.lastIndexOf("\n", s - 1) + 1, ind = code.value.slice(ls, s).match(/^ */)[0];
+        code.value = code.value.slice(0, s) + "\n" + ind + code.value.slice(code.selectionEnd); code.selectionStart = code.selectionEnd = s + 1 + ind.length; gut(); save();
+      }
+    });
+    const show = html => { out.innerHTML = html; out.scrollTop = 0; };
+    const setReady = on => { ready = on; btn("run").disabled = !on; btn("check").disabled = !on; };
+    function execute() {
+      const db = SqlRuntime.fresh(ex.setup);
+      try { return SqlRuntime.run(db, code.value); } finally { db.close(); }
+    }
+    function run() {
+      if (!ready) return;
+      verdict.hidden = true;
+      show(sqlRender(execute(), SQL_SHOW));
+    }
+    function check() {
+      if (!ready) return;
+      const r = execute();
+      show(sqlRender(r, SQL_SHOW));
+      let g;
+      try { g = SqlRuntime.grade(ex, code.value); } catch (e) { g = { ok: false, msg: "La vérification a rencontré un problème : " + ((e && e.message) || e) }; }
+      verdict.hidden = false;
+      if (g.ok) {
+        verdict.className = "pyverdict ok"; verdict.textContent = "✓ Exercice réussi ! Leçon validée.";
+        markDone("sql", l.id); const t = $("#done-tag"); if (t) t.textContent = "✓ Exercice réussi";
+        askUnit("sql", l);
+      } else { verdict.className = "pyverdict no"; verdict.textContent = "✗ " + g.msg; }
+    }
+    btn("run").onclick = run; btn("check").onclick = check;
+    btn("clear").onclick = () => { out.innerHTML = ""; };
+    const twoStep = (el, label, action) => {
+      const base = el.textContent; let armed = false, t = null;
+      el.onclick = () => {
+        if (!armed) { armed = true; el.textContent = label; t = setTimeout(() => { armed = false; el.textContent = base; }, 3000); return; }
+        clearTimeout(t); armed = false; el.textContent = base; action();
+      };
+    };
+    twoStep(btn("reset"), "Effacer mon code ? Cliquer encore", () => setCode(ex.start));
+    twoStep($("[data-load-sol]", root), "Remplacer mon code ? Cliquer encore", () => setCode(ex.sol));
+    cleanup = () => { clearTimeout(saveT); Store.update("sql", s => { s.drafts[l.id] = code.value; }); };
+
+    /* Les exemples de la leçon : exécutés pour de vrai, avec un bouton pour les reprendre dans l'éditeur */
+    function wireExamples() {
+      $$("pre.sqlx", root).forEach(pre => {
+        const sql = pre.textContent;
+        const box = document.createElement("div"); box.className = "sqlres";
+        let r; const db = SqlRuntime.fresh(ex.setup);
+        try { r = SqlRuntime.run(db, sql); } finally { db.close(); }
+        box.innerHTML = `<div class="sqlres-head"><span>Résultat</span><button type="button" class="btn ghost small" data-try>Essayer dans l'éditeur</button></div>${sqlRender(r, 8)}`;
+        pre.after(box);
+        const tb = $("[data-try]", box);
+        const load = () => { setCode(sql); code.focus({ preventScroll: true }); $(".bench", root).scrollIntoView({ behavior: "smooth", block: "start" }); run(); };
+        const untouched = () => !code.value.trim() || code.value.trim() === ex.start.trim() || code.value.trim() === sql.trim();
+        let armed = false, t = null;
+        tb.onclick = () => {
+          if (untouched() || armed) { clearTimeout(t); armed = false; tb.textContent = "Essayer dans l'éditeur"; load(); return; }
+          armed = true; tb.textContent = "Remplacer ton code ? Cliquer encore"; t = setTimeout(() => { armed = false; tb.textContent = "Essayer dans l'éditeur"; }, 3000);
+        };
+      });
+    }
+    SqlRuntime.load().then(() => {
+      show(`<span class="sys">SQLite est prêt. Écris ta requête puis clique sur ▶ Exécuter.</span>`);
+      $(".schema-list", root).innerHTML = schemaHtml(ex.setup);
+      setReady(true);
+      try { wireExamples(); } catch (e) { /* les exemples restent lisibles sans résultat */ }
+    }, e => { show(`<span class="err">${esc(e.message)}</span>`); });
   }
 
   /* ------------------------------------------------------------------ */

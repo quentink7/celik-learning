@@ -8,6 +8,7 @@
   /* Fils */
   --indigo:#27348B; --indigo-soft:#E2E5F6; --millet:#D99A00; --millet-soft:#FBEFC8; --teal:#0C7773; --teal-soft:#D8EFEE;
   --madder:#B0281F; --madder-soft:#FBE5E2; --leaf:#1C7646; --leaf-soft:#DDF0E4;
+  --bissap:#9B2C63; --bissap-soft:#F6E1EC;
   /* Alias utilisés par les démos et le contenu */
   --accent:var(--indigo); --accent-ink:#FFFFFF; --accent-soft:var(--indigo-soft);
   --hl:var(--millet); --hl-soft:rgba(217,154,0,.32);
@@ -25,7 +26,7 @@
   --paper:#0A0E22; --surface:#11173A; --surface-2:#192050; --ink:#EDEFF8; --ink-2:#BFC5E0; --muted:#8C93B8;
   --line:#28306A; --line-strong:#3D4689;
   --indigo:#93A1FF; --indigo-soft:#1C2463; --millet:#F2BD2C; --millet-soft:#3A2F0B; --teal:#45C7C1; --teal-soft:#0E3434;
-  --madder:#F28B7E; --madder-soft:#3A1614; --leaf:#5DCB8F; --leaf-soft:#123122;
+  --madder:#F28B7E; --madder-soft:#3A1614; --leaf:#5DCB8F; --leaf-soft:#123122; --bissap:#F08CC0; --bissap-soft:#3A1228;
   --accent-ink:#0A0E22; --hl-soft:rgba(242,189,44,.25); --axis:#4D5688; --grid:#1D2452;
   --code-bg:#070A1C; --code-line:#1C2350;
   color-scheme:dark}}
@@ -33,7 +34,7 @@
   --paper:#0A0E22; --surface:#11173A; --surface-2:#192050; --ink:#EDEFF8; --ink-2:#BFC5E0; --muted:#8C93B8;
   --line:#28306A; --line-strong:#3D4689;
   --indigo:#93A1FF; --indigo-soft:#1C2463; --millet:#F2BD2C; --millet-soft:#3A2F0B; --teal:#45C7C1; --teal-soft:#0E3434;
-  --madder:#F28B7E; --madder-soft:#3A1614; --leaf:#5DCB8F; --leaf-soft:#123122;
+  --madder:#F28B7E; --madder-soft:#3A1614; --leaf:#5DCB8F; --leaf-soft:#123122; --bissap:#F08CC0; --bissap-soft:#3A1228;
   --accent-ink:#0A0E22; --hl-soft:rgba(242,189,44,.25); --axis:#4D5688; --grid:#1D2452;
   --code-bg:#070A1C; --code-line:#1C2350;
   color-scheme:dark}
@@ -131,12 +132,13 @@ button{font:inherit; color:inherit}
 .hero h1{font-size:clamp(2.4rem,11.2cqi,5.6rem); font-weight:900; font-stretch:125%; line-height:.92; letter-spacing:-.03em}
 .hero h1 .t-millet{color:var(--millet)}
 .hero h1 .t-indigo{color:var(--indigo)}
+.hero h1 .t-bissap{color:var(--bissap)}
 .hero p.lead{font-size:1.1875rem; color:var(--ink-2); max-width:34rem}
 .cloth-wrap{display:flex; flex-direction:column; gap:.625rem}
 .cloth{display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:3px; padding:10px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); box-shadow:0 1px 0 var(--line),0 24px 48px -32px rgba(16,20,43,.35)}
 .cloth .band-label{grid-column:1/-1; display:flex; justify-content:space-between; font-family:var(--f-display); font-size:.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); padding:.35rem .15rem .2rem}
 .cell{--c:var(--indigo); --cw:color-mix(in srgb,var(--c) 45%,var(--surface)); position:relative; aspect-ratio:1; border-radius:1px; background-color:var(--c); display:block; text-decoration:none; outline-offset:1px; transition:transform .15s ease, filter .15s ease}
-.cell.py{--c:var(--millet)} .cell.ml{--c:var(--indigo)} .cell.maths{--c:var(--teal)}
+.cell.py{--c:var(--millet)} .cell.ml{--c:var(--indigo)} .cell.maths{--c:var(--teal)} .cell.sq{--c:var(--bissap)}
 .cell.todo{background-color:var(--surface-2); --cw:color-mix(in srgb,var(--c) 22%,var(--surface-2))}
 .cell.todo[class*="motif-"]{opacity:1}
 .cell:hover{transform:scale(1.06); z-index:2; filter:saturate(1.15)}
@@ -153,11 +155,11 @@ button{font:inherit; color:inherit}
   @keyframes thread{from{transform:scaleY(.2); opacity:0}to{transform:none; opacity:1}}
 }
 
-.courses{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,24rem),1fr)); gap:1.25rem}
+.courses{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,21rem),1fr)); gap:1.25rem}
 .course{display:grid; grid-template-columns:22px minmax(0,1fr); background:var(--surface); border:1px solid var(--line); border-radius:var(--r); text-decoration:none; color:var(--ink); overflow:hidden; transition:border-color .15s, transform .15s}
 .course:hover{border-color:var(--ink); transform:translateY(-2px)}
 .course .selvage{--cw:color-mix(in srgb,var(--c) 40%,var(--surface)); background-color:var(--c)}
-.course.python .selvage{--c:var(--millet)} .course.ml .selvage{--c:var(--indigo)}
+.course.python .selvage{--c:var(--millet)} .course.ml .selvage{--c:var(--indigo)} .course.sql .selvage{--c:var(--bissap)}
 .course .body{padding:1.375rem 1.5rem 1.25rem; display:flex; flex-direction:column; gap:.75rem; min-width:0}
 .course .kicker{font-family:var(--f-mono); font-size:.8125rem; color:var(--ink-2)}
 .course h2{font-size:clamp(1.8rem,3.4vw,2.4rem); font-weight:900; font-stretch:122%; letter-spacing:-.02em}
@@ -165,7 +167,7 @@ button{font:inherit; color:inherit}
 .course ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:.3rem; font-size:.9375rem}
 .course li{padding-left:1.1rem; position:relative}
 .course li::before{content:""; position:absolute; left:0; top:.62em; width:.5rem; height:2px; background:var(--c, var(--ink-2))}
-.course.python li::before{background:var(--millet)} .course.ml li::before{background:var(--indigo)}
+.course.python li::before{background:var(--millet)} .course.ml li::before{background:var(--indigo)} .course.sql li::before{background:var(--bissap)}
 .course .foot{margin-top:auto; padding-top:.875rem; border-top:1px dashed var(--line-strong); display:flex; justify-content:space-between; align-items:center; gap:.75rem 1rem; flex-wrap:wrap}
 .course .facts{font-size:.8125rem; color:var(--muted); font-family:var(--f-display); font-weight:600}
 .prog{display:flex; align-items:center; gap:.625rem; font-size:.8125rem; color:var(--muted); font-variant-numeric:tabular-nums}
@@ -228,7 +230,7 @@ button{font:inherit; color:inherit}
 /* ---------- En-tête de leçon ---------- */
 .lesson-head{display:grid; grid-template-columns:auto minmax(0,1fr); gap:.25rem 1.5rem; align-items:end}
 .lesson-head .big-n{grid-row:1 / span 3; font-family:var(--f-display); font-weight:900; font-stretch:125%; font-size:clamp(4rem,11vw,7.5rem); line-height:.8; color:var(--c, var(--indigo)); letter-spacing:-.04em}
-.lesson-head.py{--c:var(--millet)} .lesson-head.maths{--c:var(--teal)}
+.lesson-head.py{--c:var(--millet)} .lesson-head.maths{--c:var(--teal)} .lesson-head.sq{--c:var(--bissap)}
 @media (max-width:560px){.lesson-head{grid-template-columns:minmax(0,1fr)}.lesson-head .big-n{grid-row:auto; font-size:3.5rem}}
 .lesson-head h1{font-size:clamp(1.8rem,4.4vw,2.9rem); font-weight:850; font-stretch:112%}
 .lesson-head .meta{display:flex; gap:.5rem 1.25rem; flex-wrap:wrap; font-size:.875rem; color:var(--muted); align-items:center}
@@ -236,7 +238,7 @@ button{font:inherit; color:inherit}
 .objective b{font-family:var(--f-display); font-size:.75rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink); margin-right:.5rem}
 .section-title{font-size:1.35rem; font-weight:800; font-stretch:110%}
 .pager{display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; border-top:1.5px solid var(--ink); padding-top:1.25rem}
-.pager a{max-width:48%}
+.pager a{max-width:48%; white-space:normal}
 @media (max-width:560px){.pager a{max-width:100%}}
 .done-box{display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; background:var(--leaf-soft); color:var(--leaf); border-radius:var(--r); padding:.875rem 1rem; font-family:var(--f-display); font-weight:700}
 .done-box a{color:inherit}
@@ -441,3 +443,35 @@ p code,li code,td code,.box code,.answer,.example{overflow-wrap:anywhere}
 @keyframes fbIn{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){.fb-overlay{animation:none}}
 @media (max-width:420px){.fb-n span{font-size:.62rem}.fb h2{font-size:1.35rem}}
+
+/* ---------- Cours SQL : résultats de requêtes, schéma, source ---------- */
+.box.source{background:var(--bissap-soft); --tagc:var(--bissap)}
+.sqlres{margin-top:-.25rem; border:1px solid var(--line); border-top:0; border-radius:0 0 var(--r) var(--r); background:var(--surface); padding:.5rem .75rem .625rem}
+.lesson pre.sqlx{border-radius:var(--r) var(--r) 0 0}
+.sqlres-head{display:flex; justify-content:space-between; align-items:center; gap:.5rem; flex-wrap:wrap; font-family:var(--f-display); font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+.sqlres-head .btn{text-transform:none; letter-spacing:0; font-size:.8125rem}
+.sqlres-t{overflow-x:auto; max-width:100%}
+.sqlres-t table{border-collapse:collapse; font-family:var(--f-mono); font-size:.8125rem; min-width:100%}
+.sqlres-t th,.sqlres-t td{padding:.3rem .6rem; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap}
+.sqlres-t thead th{font-family:var(--f-mono); font-weight:600; font-size:.8125rem; text-transform:none; letter-spacing:0; color:var(--ink-2); background:var(--surface-2)}
+.sqlres-t td.num{text-align:right; font-variant-numeric:tabular-nums}
+.sqlres-t td.null{color:var(--muted); font-style:italic}
+.sqlres-t td.none{color:var(--muted); font-family:var(--f-body)}
+.sqlres-n{margin:.3rem 0 .4rem; font-size:.75rem; color:var(--muted)}
+.sqlres-msg{margin:.3rem 0; font-family:var(--f-mono); font-size:.8125rem; color:var(--leaf)}
+.sqlres-err{margin:.4rem 0; padding:.5rem .7rem; border-radius:var(--r); background:var(--madder-soft); color:var(--madder); font-size:.875rem}
+.sqlres-err p{margin:.3rem 0 0; color:var(--ink-2)}
+/* dans l'atelier (toujours sombre) */
+.sqlout{white-space:normal; max-height:420px}
+.sqlout .sqlres-t thead th{background:#141A40; color:#C9CEEA; border-color:#232B5C}
+.sqlout .sqlres-t td{border-color:#1C2350; color:var(--code-ink)}
+.sqlout .sqlres-t td.null,.sqlout .sqlres-n,.sqlout .sqlres-t td.none{color:#7F88B3}
+.sqlout .sqlres-msg{color:#7EE0A7}
+.sqlout .sqlres-err{background:#2A0F12; color:#FF8F86}
+.sqlout .sqlres-err p{color:#F2BD2C}
+.sqlout .sqlres-t{margin-top:.25rem}
+.schema-list{display:flex; flex-direction:column; gap:.6rem; margin-top:.5rem}
+.schema-t b{font-family:var(--f-mono); font-size:.875rem}
+.schema-t ul{list-style:none; margin:.2rem 0 0; padding:0 0 0 .75rem; border-left:2px dotted var(--line-strong); display:flex; flex-direction:column; gap:.1rem}
+.schema-t li{font-size:.8125rem; color:var(--muted)}
+.schema-t li code{color:var(--ink)}

@@ -8,7 +8,7 @@ CELIK Learning est une plateforme web gratuite, en français, qui apprend à de 
 
 Ce qui ne doit pas changer :
 
-- **Deux cours au choix** dès l'accueil : Python (16 leçons) ou Machine Learning (16 modules, dont 7 de maths).
+- **Trois cours au choix** dès l'accueil : Python (16 leçons), Machine Learning (16 modules, dont 7 de maths) et SQL (16 leçons, ajouté le 19 octobre 2026 à la demande de Quentin).
 - **Connexion par email avant d'accéder aux cours** : mot de passe, lien magique par email, mot de passe oublié.
 - **Progression enregistrée dans Supabase** : leçons terminées, scores des quiz, code en cours de chaque exercice. L'élève reprend où il s'est arrêté, sur n'importe quel appareil.
 - **Pas d'assistant IA dans les cours** : l'option a été retirée volontairement. Les cours doivent être assez détaillés pour s'en passer.
@@ -23,7 +23,8 @@ Ce qui ne doit pas changer :
 | Cours Python (16 leçons) | Terminé | Les 16 solutions passent la correction ; aucun code de départ ne passe seul |
 | Cours Machine Learning (16 modules) | Terminé | Les 80 sections ont leur approfondissement ; 6 démos sans erreur |
 | Connexion et sauvegarde | Code prêt, testé en mode démo et avec un faux projet | Pas encore testé avec un vrai projet Supabase |
-| Mise en ligne | À faire | — |
+| Mise en ligne | En ligne sur Vercel (celik-learning.vercel.app), code sur GitHub (privé) | — |
+| Cours SQL (16 leçons) | Ajouté le 19/10/2026 : programme de CS50 SQL (Harvard), SQLite dans la page, base « boutique Nong-Taaba » | Les 16 solutions passent ; aucun code de départ ne passe ; 84 exemples exécutés |
 
 Sans identifiants Supabase dans `assets/config.js`, le site passe en **mode démo** : pas de connexion, progression gardée dans le navigateur. Un bandeau jaune le signale.
 
@@ -35,10 +36,12 @@ Une seule page (`index.html`) charge tout ; la navigation se fait par l'ancre de
 Navigateur de l'élève (site statique)
   courses/python-1.js … -4.js, python.js   16 leçons + exercices
   courses/ml.js + ml-detail-1.js … -4.js   16 modules, 80 sections
+  courses/sql-1.js … -4.js, sql.js, sql-data.js   16 leçons SQL + base d'exemple
         │
         ▼
   assets/app.js            routeur, pages, quiz, atelier, étoffe de progression
         ├─► assets/python-runtime.js   Python (Skulpt, assets/lib/) dans la page
+        ├─► assets/sql-runtime.js      SQLite (sql.js, assets/lib/) dans la page
         ├─► assets/demos.js            6 démos ML en canvas
         └─► assets/store.js            connexion + progression, cache localStorage
                   │  lit et enregistre
@@ -80,6 +83,8 @@ Le contenu est rédigé et ne doit pas être réécrit : seulement corrigé ou c
 **Python : 16 leçons en 4 parties** (`courses/python-1.js` à `python-4.js`, assemblées par `python.js`) : premiers pas ; décider et répéter ; ranger les données ; organiser son code (projet final : analyse de logs).
 Chaque leçon : `id` (p01…p16), `title`, `minutes`, `goal`, `why`, `sections`, `pitfalls`, `remember`, `quiz`, `exercise` (`task`, `hint`, `start`, `sol`, `inputs`, `check(sortie, code)` → `true` ou message d'aide, `extra`).
 
+**SQL : 16 leçons en 4 parties** (`courses/sql-1.js` à `sql-4.js`, assemblées par `sql.js`, ids s01…s16) : interroger une base ; relier les tables ; concevoir et écrire ; aller plus loin (projet final + injection SQL). Le programme suit les 7 semaines de CS50's Introduction to Databases with SQL (Harvard, CC BY-NC-SA 4.0), crédité sur la page du cours ; les textes et exercices sont propres à CELIK Learning. Chaque leçon a les mêmes champs qu'une leçon Python, plus `cs50` et éventuellement `setup` ; voir le README pour la correction.
+
 **Machine Learning : 16 étapes** dans cet ordre : m1, a1, a2, m2, a3, a4, m3, a5, m4, a6, m5, m6, m7, a7, m8, m9 (aN = maths placées juste avant le module qui en a besoin).
 - `courses/ml.js` : contenu de base (objectif, question « devine », sections, démos, quiz, mots-clés, « explique avec tes mots »).
 - `courses/ml-detail-1.js` à `-4.js` : approfondissement de chacune des 80 sections, rangé par id de module puis par **titre exact** de section : `plain`, `steps`, `stepsTitle`, `pitfall`, plus `intro` et `prereq` par module.
@@ -116,16 +121,16 @@ Pistes à valider avec Quentin : animation du carreau qui se tisse à la validat
 6. Peaufiner le design sans changer la direction. Critère : aucune régression à 390 px ni en thème sombre.
 7. Ajouter des tests Playwright : chaque exercice passe avec sa solution et échoue avec son code de départ ; chaque module ML s'affiche sans erreur.
 
-Hors périmètre : assistant IA dans les cours, paiement, nouveaux cours.
+Hors périmètre : assistant IA dans les cours, paiement. (Les nouveaux cours étaient hors périmètre ; Quentin a demandé le cours SQL le 19 octobre 2026.)
 
 ## Règles
 
-- Ne jamais changer l'`id` d'une leçon ou d'un module publié (p01…p16, m1…m9, a1…a7).
+- Ne jamais changer l'`id` d'une leçon ou d'un module publié (p01…p16, s01…s16, m1…m9, a1…a7).
 - Ne jamais mettre la clé `service_role` dans le site.
 - Garder le site statique : pas de framework ni de compilation sans l'accord de Quentin.
-- Pas de dépendance à un CDN : Skulpt, le client Supabase et les polices sont dans `assets/`.
+- Pas de dépendance à un CDN : Skulpt, sql.js, le client Supabase et les polices sont dans `assets/`.
 - Français simple, tutoiement, phrases courtes, exemples du quotidien ouest-africain.
 - Pas de `confirm()` ni `alert()` : confirmations en deux clics dans la page.
 - Accessibilité : focus visible, contraste suffisant dans les deux thèmes, `prefers-reduced-motion` respecté.
 
-Avant chaque mise en ligne : 16 exercices Python (solution = réussi, départ = échec), 16 modules ML sans erreur, affichage à 390 px sans défilement horizontal, connexion complète avec un vrai compte.
+Avant chaque mise en ligne : 16 exercices Python et 16 exercices SQL (solution = réussi, départ = échec), 16 modules ML sans erreur, affichage à 390 px sans défilement horizontal, connexion complète avec un vrai compte.

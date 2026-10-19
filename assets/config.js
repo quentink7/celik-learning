@@ -11,7 +11,7 @@
  */
 window.SITE_CONFIG = {
   siteName: "CELIK Learning",
-  tagline: "Apprendre Python et l'IA, fil après fil",
+  tagline: "Apprendre Python, SQL et l'IA, fil après fil",
   supabaseUrl: "https://aisalnafbiulizdqdeql.supabase.co",
   supabaseAnonKey: "sb_publishable_l2v0KRJe4N8nESQ9WknTVg_3qtjbtSU",
   // false tant qu'aucun service d'envoi (SMTP) n'est branché dans Supabase :

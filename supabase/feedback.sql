@@ -5,8 +5,8 @@ create table if not exists public.feedback (
   id         bigint generated always as identity primary key,
   user_id    uuid        not null default auth.uid() references auth.users (id) on delete cascade,
   kind       text        not null check (kind in ('site', 'unit')),          -- avis sur le site, ou sur une leçon / un module
-  course     text        not null default '' check (course in ('', 'python', 'ml')),
-  unit_id    text        not null default '' check (char_length(unit_id) <= 8), -- p01…p16, m1…m9, a1…a7
+  course     text        not null default '' check (course in ('', 'python', 'ml', 'sql')),
+  unit_id    text        not null default '' check (char_length(unit_id) <= 8), -- p01…p16, s01…s16, m1…m9, a1…a7
   rating     smallint    check (rating between 1 and 5),
   comment    text        not null default '' check (char_length(comment) <= 500),
   dismissed  boolean     not null default false,                              -- « Non merci » / « Passer »

@@ -1,12 +1,13 @@
-# CELIK Learning — plateforme de cours Python et Machine Learning
+# CELIK Learning — plateforme de cours Python, SQL et Machine Learning
 
 Site statique (HTML, CSS, JavaScript, sans étape de compilation) avec :
 
-- une page d'accueil où l'élève choisit **Python** ou **Machine Learning** ;
+- une page d'accueil où l'élève choisit **Python**, **Machine Learning** ou **SQL** ;
 - la **connexion par email** (mot de passe, ou lien magique sans mot de passe) via Supabase ;
 - la **sauvegarde de la progression** dans le compte de l'élève (leçons terminées, scores de quiz, code en cours) ;
 - un **cours Python** de 16 leçons avec une console Python intégrée (le code s'exécute dans le navigateur) et des exercices corrigés automatiquement ;
-- un **cours Machine Learning** de 16 modules (9 de ML, 7 de maths placés juste avant le module qui en a besoin), avec explications « En clair », calculs « Pas à pas », pièges fréquents, démos interactives, quiz et mots-clés.
+- un **cours Machine Learning** de 16 modules (9 de ML, 7 de maths placés juste avant le module qui en a besoin), avec explications « En clair », calculs « Pas à pas », pièges fréquents, démos interactives, quiz et mots-clés ;
+- un **cours SQL** de 16 leçons, dont le programme suit CS50 SQL (Harvard), avec SQLite intégré (les requêtes s'exécutent dans le navigateur), une base d'exemple (la boutique Nong-Taaba, à Ouagadougou) et des exercices corrigés automatiquement.
 
 Le nom et le slogan se changent dans `assets/config.js`. Le design (« l'étoffe ») est décrit dans `CLAUDE.md`.
 
@@ -83,21 +84,32 @@ assets/config.js           nom du site + identifiants Supabase  ← à modifier
 assets/app.js              pages, navigation, quiz, console Python, modules ML
 assets/store.js            connexion et sauvegarde de la progression
 assets/python-runtime.js   interpréteur Python (Skulpt) et erreurs en français
+assets/sql-runtime.js      moteur SQL (SQLite via sql.js), erreurs en français, correction des exercices
 assets/demos.js            démos interactives du cours ML
 assets/celik.css           le style (design « l'étoffe »)
 assets/fonts/              polices hébergées avec le site
-assets/lib/                bibliothèques incluses (Skulpt, Supabase) : aucun CDN
+assets/lib/                bibliothèques incluses (Skulpt, sql.js, Supabase) : aucun CDN
 courses/python-1.js … -4.js   les 16 leçons Python, en 4 parties
 courses/python.js          assemble le cours Python
 courses/ml.js              le contenu de base du cours ML (modules, quiz, mots-clés)
 courses/ml-detail-1.js … -4.js   l'approfondissement débutant de chaque section ML
+courses/sql-1.js … -4.js   les 16 leçons SQL, en 4 parties ; courses/sql.js les assemble
+courses/sql-data.js        la base d'exemple du cours SQL (générée par tools/gen-sql-data.py)
 supabase/schema.sql        la table de progression et ses règles de sécurité
+supabase/feedback.sql      la table des avis des élèves
+supabase/cours-sql.sql     à lancer une fois pour autoriser le cours SQL dans les deux tables
 ```
 
 ### Modifier ou ajouter une leçon Python
 Chaque leçon est un objet dans `courses/python-N.js` : `title`, `goal`, `why`, `sections` (titre + HTML), `pitfalls`, `remember`, `quiz` et `exercise`.
 L'exercice contient `task` (l'énoncé), `hint`, `start` (code de départ), `sol` (solution) et `check(sortie, code)`, une fonction qui renvoie `true` si c'est réussi, ou un message expliquant ce qui ne va pas.
 **Ne change pas l'`id` d'une leçon déjà publiée** : la progression des élèves y est rattachée.
+
+### Modifier ou ajouter une leçon SQL
+Même forme qu'une leçon Python, dans `courses/sql-N.js`, avec `cs50` (la semaine de CS50 SQL correspondante) et, si besoin, `setup` (les tables propres à la leçon, ajoutées à la base de la boutique).
+Les exemples écrits `<pre class="sqlx"><code>…</code></pre>` sont exécutés pour de vrai dans la page, avec leur résultat affiché dessous.
+L'exercice contient `task`, `hint`, `start`, `sol`, puis la façon de corriger : par défaut, le résultat de l'élève est comparé à celui de `sol` (`ordered` pour exiger l'ordre, `names` pour exiger les noms de colonnes) ; `mode: "state"` compare le résultat de la requête `verify` après le code ; `test({ run })` permet une correction sur mesure ; `need` impose un mot-clé. La correction tourne deux fois, la seconde sur une variante des données (`SQL_BASE.variant`), pour qu'un résultat recopié à la main ne passe pas.
+Pour changer la base d'exemple : modifier `tools/gen-sql-data.py`, puis `python3 tools/gen-sql-data.py courses/sql-data.js /tmp/boutique.db`.
 
 ### Modifier une section ML
 Le texte de base est dans `courses/ml.js` ; les encadrés « En clair », « Pas à pas » et « Piège fréquent » sont dans `courses/ml-detail-N.js`, rangés par identifiant de module puis par titre exact de la section.

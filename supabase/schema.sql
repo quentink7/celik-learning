@@ -3,7 +3,7 @@
 
 create table if not exists public.progress (
   user_id    uuid        not null default auth.uid() references auth.users (id) on delete cascade,
-  course     text        not null check (course in ('python', 'ml')),
+  course     text        not null check (course in ('python', 'ml', 'sql')),
   state      jsonb       not null default '{}'::jsonb,
   updated_at timestamptz not null default now(),
   primary key (user_id, course)
