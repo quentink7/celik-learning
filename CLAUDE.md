@@ -13,7 +13,7 @@ Ce qui ne doit pas changer :
 - **Progression enregistrée dans Supabase** : leçons terminées, scores des quiz, code en cours de chaque exercice. L'élève reprend où il s'est arrêté, sur n'importe quel appareil.
 - **Pas d'assistant IA dans les cours** : l'option a été retirée volontairement. Les cours doivent être assez détaillés pour s'en passer.
 - **Site statique**, sans étape de compilation, hébergeable gratuitement (Netlify, Vercel, Cloudflare Pages).
-- **Public visé** : débutants complets, francophones, notamment en Afrique de l'Ouest. Exemples ancrés dans leur quotidien (francs CFA, Ouagadougou, Orange Money) et dans la cybersécurité.
+- **Public visé** : débutants complets, francophones, notamment en Afrique de l'Ouest. Exemples ancrés dans leur quotidien (francs CFA, Ouagadougou, Orange Money, école, marché, santé). Depuis le 26 octobre 2026, pas d'exemples centrés sur la cybersécurité : tous les élèves n'en font pas (demande de Quentin).
 
 ## État actuel
 
@@ -80,12 +80,12 @@ Le retour d'un lien email (jetons dans l'ancre de l'URL) est déjà géré par l
 
 Le contenu est rédigé et ne doit pas être réécrit : seulement corrigé ou complété. Il est séparé du code, dans `courses/`.
 
-**Python : 16 leçons en 4 parties** (`courses/python-1.js` à `python-4.js`, assemblées par `python.js`) : premiers pas ; décider et répéter ; ranger les données ; organiser son code (projet final : analyse de logs).
+**Python : 16 leçons en 4 parties** (`courses/python-1.js` à `python-4.js`, assemblées par `python.js`) : premiers pas ; décider et répéter ; ranger les données ; organiser son code (projet final : le bulletin d'une classe). Programme aligné sur Python for Everybody (Charles Severance, université du Michigan, CC BY 4.0) ; repère de chaque leçon dans `courses/sources.js`.
 Chaque leçon : `id` (p01…p16), `title`, `minutes`, `goal`, `why`, `sections`, `pitfalls`, `remember`, `quiz`, `exercise` (`task`, `hint`, `start`, `sol`, `inputs`, `check(sortie, code)` → `true` ou message d'aide, `extra`).
 
 **SQL : 16 leçons en 4 parties** (`courses/sql-1.js` à `sql-4.js`, assemblées par `sql.js`, ids s01…s16) : interroger une base ; relier les tables ; concevoir et écrire ; aller plus loin (projet final + injection SQL). Le programme suit les 7 semaines de CS50's Introduction to Databases with SQL (Harvard, CC BY-NC-SA 4.0), crédité sur la page du cours ; les textes et exercices sont propres à CELIK Learning. Chaque leçon a les mêmes champs qu'une leçon Python, plus `cs50` et éventuellement `setup` ; voir le README pour la correction.
 
-**Machine Learning : 16 étapes** dans cet ordre : m1, a1, a2, m2, a3, a4, m3, a5, m4, a6, m5, m6, m7, a7, m8, m9 (aN = maths placées juste avant le module qui en a besoin).
+**Machine Learning : 16 étapes**, programme aligné sur MIT 6.036 (CC BY-NC-SA 4.0) dans l'ordre de la Machine Learning Specialization d'Andrew Ng ; repères dans `courses/sources.js`. Exemple fil rouge des modules 5 et Maths 6 : le dépistage du paludisme. Dans cet ordre : m1, a1, a2, m2, a3, a4, m3, a5, m4, a6, m5, m6, m7, a7, m8, m9 (aN = maths placées juste avant le module qui en a besoin).
 - `courses/ml.js` : contenu de base (objectif, question « devine », sections, démos, quiz, mots-clés, « explique avec tes mots »).
 - `courses/ml-detail-1.js` à `-4.js` : approfondissement de chacune des 80 sections, rangé par id de module puis par **titre exact** de section : `plain`, `steps`, `stepsTitle`, `pitfall`, plus `intro` et `prereq` par module.
 - Un titre de section modifié dans `ml.js` doit l'être aussi dans `ml-detail-*.js`, sinon son approfondissement disparaît sans erreur.

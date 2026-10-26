@@ -4,3 +4,4 @@ supabase/
 .gitignore
 .vercelignore
 tools/
+SOURCES.md

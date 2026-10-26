@@ -25,16 +25,16 @@ const MODULES = [
 <tr><td>Entraînement</td><td>ajuster le modèle sur des exemples</td><td>apprendre à partir de 5 000 ventes</td></tr>
 <tr><td>Inférence</td><td>utiliser le modèle sur un cas nouveau</td><td>estimer une maison pas encore vendue</td></tr>
 </tbody></table></div>`,
-      recall: { q: "Dans un détecteur de phishing, cite deux features possibles et le label.",
-        a: "Features : présence d'un lien raccourci, domaine de l'expéditeur, mots d'urgence (« votre compte sera suspendu »), pièce jointe… Label : phishing ou légitime." } },
+      recall: { q: "Dans un filtre à spam pour les SMS, cite deux features possibles et le label.",
+        a: "Features : présence d'un lien, numéro de l'expéditeur inconnu, mots comme « gagnez » ou « gratuit », nombre de majuscules… Label : spam ou message normal." } },
     { title: "Supervisé : on connaît les réponses",
       html: `<p>Chaque exemple d'entraînement a son label. Deux sous-familles, selon ce qu'on prédit :</p><ul><li><strong>Régression</strong> : un nombre continu (prix, température, durée).</li><li><strong>Classification</strong> : une catégorie (spam / pas spam ; chat, chien ou oiseau).</li></ul><p>Réflexe : demande-toi si la réponse <em>se mesure</em> ou <em>se range dans une boîte</em>. Si elle se mesure, c'est une régression. Si elle se range, c'est une classification.</p>`,
       recall: { q: "Prédire si un étudiant réussira son examen (oui / non), c'est quoi ? Et prédire sa note sur 20 ?",
         a: "Oui / non : classification (deux boîtes). La note sur 20 : régression (une valeur qui se mesure)." } },
     { title: "Non supervisé : trouver la structure seul",
-      html: `<p>Pas de labels. L'algorithme cherche des régularités dans les données :</p><ul><li><strong>Clustering</strong> : regrouper ce qui se ressemble (segmenter des clients selon leurs habitudes).</li><li><strong>Réduction de dimension</strong> : résumer beaucoup de variables en quelques-unes.</li><li><strong>Détection d'anomalies</strong> : repérer ce qui ne ressemble à rien de connu (une connexion à 3 h du matin depuis un pays inhabituel).</li></ul>`,
-      recall: { q: "Pourquoi la détection d'anomalies est-elle utile face à une attaque jamais vue ?",
-        a: "Parce qu'elle n'a pas besoin d'exemples étiquetés d'attaques : elle apprend ce qui est « normal » et signale ce qui s'en écarte, même si c'est une attaque inédite." } },
+      html: `<p>Pas de labels. L'algorithme cherche des régularités dans les données :</p><ul><li><strong>Clustering</strong> : regrouper ce qui se ressemble (segmenter des clients selon leurs habitudes).</li><li><strong>Réduction de dimension</strong> : résumer beaucoup de variables en quelques-unes.</li><li><strong>Détection d'anomalies</strong> : repérer ce qui ne ressemble à rien de connu (une facture d'électricité trois fois plus élevée que d'habitude).</li></ul>`,
+      recall: { q: "Pourquoi la détection d'anomalies est-elle utile face à un problème jamais vu ?",
+        a: "Parce qu'elle n'a pas besoin d'exemples étiquetés de problèmes : elle apprend ce qui est « normal » et signale ce qui s'en écarte, même si c'est un cas totalement nouveau (une fuite, un compteur défectueux…)." } },
     { title: "Renforcement : essais, erreurs, récompenses",
       html: `<p>Un <strong>agent</strong> agit dans un <strong>environnement</strong>, reçoit des <strong>récompenses</strong> ou des pénalités, et apprend une stratégie qui maximise la récompense sur la durée. C'est ainsi qu'on entraîne des programmes à jouer aux échecs ou au go, ou des robots à marcher.</p><p>Différence clé avec le supervisé : personne ne dit quelle était la bonne action. L'agent sait seulement si le résultat a été bon ou mauvais, parfois bien plus tard.</p>`,
       recall: { q: "Quels sont les trois éléments de base de l'apprentissage par renforcement ?",
@@ -45,14 +45,14 @@ const MODULES = [
   quiz: [
     { id: "m1q1", type: "mcq", q: "Une banque veut prédire le montant qu'un client dépensera le mois prochain. Quel type de problème ?", options: ["Classification", "Régression", "Clustering", "Renforcement"], answer: 1,
       explain: "Un montant est une valeur numérique continue : c'est une régression, en apprentissage supervisé." },
-    { id: "m1q2", type: "mcq", q: "Tu as 10 000 logs de connexion sans aucune étiquette et tu veux repérer les comportements étranges. Quelle approche ?", options: ["Régression linéaire", "Classification supervisée", "Détection d'anomalies (non supervisé)", "Apprentissage par renforcement"], answer: 2,
+    { id: "m1q2", type: "mcq", q: "Tu as les relevés de compteur d'électricité de 10 000 foyers, sans aucune étiquette, et tu veux repérer les consommations étranges. Quelle approche ?", options: ["Régression linéaire", "Classification supervisée", "Détection d'anomalies (non supervisé)", "Apprentissage par renforcement"], answer: 2,
       explain: "Sans labels, le supervisé est impossible. La détection d'anomalies apprend le « normal » et isole ce qui s'en écarte." },
     { id: "m1q3", type: "mcq", q: "Dans un dataset de maisons, la colonne « prix de vente » que l'on veut prédire est :", options: ["une feature", "le label (la cible)", "un hyperparamètre", "le modèle"], answer: 1,
       explain: "C'est la réponse à prédire : le label, ou variable cible. La surface et le quartier sont des features." },
     { id: "m1q4", type: "mcq", q: "Quelle phrase décrit le mieux le machine learning ?", options: ["Un programme qui suit des règles écrites par un expert", "Un programme qui apprend ses règles à partir d'exemples", "Une base de données très rapide", "Un robot qui pense comme un humain"], answer: 1,
       explain: "Le cœur du ML : les règles sont apprises à partir des données, pas codées à la main." },
     { id: "m1q5", type: "open", q: "Donne un exemple de problème tiré de ta vie ou de tes projets qui pourrait être résolu par du ML. Précise les features, le label s'il existe, et la famille.",
-      a: "Exemples : prédire l'affluence d'un restaurant selon le jour, la météo et les événements (régression) ; classer des e-mails de phishing (classification) ; regrouper des auditeurs selon leurs goûts musicaux (clustering, pas de label). L'essentiel : nommer les features, le label s'il existe, et en déduire la famille." }
+      a: "Exemples : prédire l'affluence d'un restaurant selon le jour, la météo et les événements (régression) ; classer des SMS en spam ou non (classification) ; regrouper des auditeurs selon leurs goûts musicaux (clustering, pas de label). L'essentiel : nommer les features, le label s'il existe, et en déduire la famille." }
   ],
   keypoints: ["Qu'est-ce qui change entre programmer et entraîner un modèle ?", "Comment distinguer une régression d'une classification ?", "Que peut-on faire quand on n'a pas de labels ?", "Qu'est-ce qu'une feature ? Et un label ?"],
   cards: [
@@ -104,7 +104,7 @@ const MODULES = [
       explain: "La validation sert d'examen blanc pour comparer des options. Le test, lui, est réservé à la mesure finale." },
     { id: "m2q3", type: "mcq", q: "Une colonne « ville » avec 4 valeurs possibles devient, après one-hot encoding :", options: ["1 colonne avec des valeurs de 1 à 4", "4 colonnes de 0 et de 1", "2 colonnes", "Elle est supprimée"], answer: 1,
       explain: "Une colonne binaire par valeur possible : 1 pour la ville de l'exemple, 0 pour les autres." },
-    { id: "m2q4", type: "mcq", q: "Un modèle de détection de fraude atteint 99,9 % en test, puis échoue en production. Cause la plus probable ?", options: ["Trop peu de features", "Une fuite de données", "La normalisation min-max au lieu de la standardisation", "Un jeu de test trop grand"], answer: 1,
+    { id: "m2q4", type: "mcq", q: "Un modèle qui prédit les impayés de crédit atteint 99,9 % en test, puis échoue en conditions réelles. Cause la plus probable ?", options: ["Trop peu de features", "Une fuite de données", "La normalisation min-max au lieu de la standardisation", "Un jeu de test trop grand"], answer: 1,
       explain: "Un score trop beau pour être vrai, suivi d'un effondrement en conditions réelles, est le symptôme typique d'une fuite : le modèle a eu accès à une information qu'il n'aura pas en production." },
     { id: "m2q5", type: "open", q: "Avec l'analogie de l'école, explique le rôle des jeux train, validation et test.",
       a: "Train = les exercices pour apprendre. Validation = les examens blancs pour ajuster sa méthode. Test = le vrai examen, passé une seule fois, qui dit le vrai niveau." }
@@ -180,8 +180,8 @@ const MODULES = [
   kind: "Concepts à comparer", method: "Tableau comparatif, exemples contrastés", minutes: 40,
   objective: "Comprendre comment un modèle transforme un score en décision de classe, et connaître trois algorithmes de classification.",
   pre: {
-    q: "Un modèle estime qu'un e-mail a 70 % de chances d'être du phishing. Qui décide si on le bloque ?",
-    a: "Un seuil de décision choisi par l'humain. Avec un seuil de 50 %, on bloque ; avec un seuil de 80 %, on laisse passer. Le modèle donne une probabilité, pas une décision."
+    q: "Un modèle estime qu'un SMS a 70 % de chances d'être un spam. Qui décide si on le met dans le dossier spam ?",
+    a: "Un seuil de décision choisi par l'humain. Avec un seuil de 50 %, on le classe en spam ; avec un seuil de 80 %, on le laisse passer. Le modèle donne une probabilité, pas une décision."
   },
   blocks: [
     { title: "Du score à la probabilité : la sigmoïde",
@@ -189,8 +189,8 @@ const MODULES = [
       recall: { q: "Que vaut σ(0) ? Que signifie un score z = 0 ?", a: "σ(0) = 1 / (1 + 1) = 0,5 : le modèle hésite complètement entre les deux classes." } },
     { title: "Le seuil de décision",
       html: `<p>Pour décider, on compare la probabilité à un <strong>seuil</strong>, souvent 0,5 : si p ≥ 0,5, classe 1 ; sinon, classe 0. Mais ce seuil se choisit selon le coût des erreurs.</p><p>Dépistage d'une maladie grave : on préfère un seuil bas, quitte à inquiéter pour rien, plutôt que de rater un malade. Filtre anti-spam : on préfère un seuil haut, pour ne pas envoyer un e-mail important dans les spams. Tu verras ce compromis en chiffres au module 5.</p>`,
-      recall: { q: "Seuil haut ou bas pour ne presque jamais rater une attaque, quitte à avoir plus de fausses alertes ?",
-        a: "Un seuil bas : l'alerte se déclenche dès que la probabilité est modérée. On rate moins d'attaques, mais on génère plus de faux positifs." } },
+      recall: { q: "Seuil haut ou bas pour ne presque jamais rater un malade, quitte à avoir plus de fausses alertes ?",
+        a: "Un seuil bas : l'alerte se déclenche dès que la probabilité est modérée. On rate moins de malades, mais on génère plus de faux positifs." } },
     { title: "La frontière de décision",
       html: `<p>Les points où p = 0,5 forment la <strong>frontière de décision</strong>. Pour la régression logistique, c'est là où <code>w · x + b = 0</code> : une droite en 2D, un plan en 3D. C'est donc un classifieur <strong>linéaire</strong>.</p><p>Si les deux classes sont séparées par une courbe (un cercle de points rouges entouré de bleus), une droite ne suffit pas : il faut des features supplémentaires ou un modèle non linéaire.</p>`,
       recall: { q: "Pourquoi la régression logistique est-elle un classifieur linéaire, alors qu'elle utilise une sigmoïde (une courbe) ?",
@@ -209,7 +209,7 @@ const MODULES = [
       recall: { q: "Pourquoi une forêt de 100 arbres est-elle généralement plus fiable qu'un seul arbre ?",
         a: "Chaque arbre fait des erreurs différentes, car il a vu des données et des features différentes. Le vote moyenne ces erreurs, ce qui réduit le surapprentissage." } }
   ],
-  feynman: { prompt: "Explique comment un modèle décide qu'un e-mail est du phishing, de la probabilité jusqu'à la décision, puis présente deux algorithmes de classification avec leur idée principale.",
+  feynman: { prompt: "Explique comment un modèle décide qu'un SMS est un spam, de la probabilité jusqu'à la décision, puis présente deux algorithmes de classification avec leur idée principale.",
     points: ["Le modèle produit un score, transformé en probabilité (sigmoïde)", "Un seuil, choisi selon le coût des erreurs, transforme la probabilité en décision", "k-NN : vote des voisins les plus proches", "Arbre : suite de questions ; forêt : vote de nombreux arbres"] },
   quiz: [
     { id: "m4q1", type: "mcq", q: "σ(z) donne 0,92. Avec un seuil de 0,5, la classe prédite est :", options: ["0", "1", "Impossible à dire", "0,92"], answer: 1,
@@ -239,24 +239,24 @@ const MODULES = [
   kind: "Formules et cas pratiques", method: "Moyen mnémotechnique, démo, calculs", minutes: 45,
   objective: "Lire une matrice de confusion et choisir la bonne métrique (précision, rappel, F1) selon le coût des erreurs.",
   pre: {
-    q: "Sur un réseau, 1 connexion sur 100 est malveillante. Un modèle qui répond toujours « normal » a quelle accuracy ? Est-il utile ?",
-    a: "99 % d'accuracy, et il est totalement inutile : il ne détecte aucune attaque. L'accuracy est trompeuse quand les classes sont déséquilibrées."
+    q: "En saison sèche, dans un village, 1 personne testée sur 100 a le paludisme. Un modèle qui répond toujours « pas malade » a quelle accuracy ? Est-il utile ?",
+    a: "99 % d'accuracy, et il est totalement inutile : il ne repère aucun malade. L'accuracy est trompeuse quand les classes sont déséquilibrées."
   },
   blocks: [
     { title: "La matrice de confusion",
-      html: `<p>Prenons un détecteur d'intrusion. La classe « positive » est l'attaque.</p><div class="table-wrap"><table class="confusion"><thead><tr><th></th><th>Prédit : attaque</th><th>Prédit : normal</th></tr></thead><tbody><tr><th>Vraie attaque</th><td><strong>VP</strong> vrai positif<br><span class="note">attaque détectée</span></td><td><strong>FN</strong> faux négatif<br><span class="note">attaque ratée</span></td></tr><tr><th>Trafic normal</th><td><strong>FP</strong> faux positif<br><span class="note">fausse alerte</span></td><td><strong>VN</strong> vrai négatif<br><span class="note">trafic laissé passer</span></td></tr></tbody></table></div><p>Pour lire le nom : le second mot dit ce que le modèle a prédit (positif ou négatif), le premier dit s'il avait raison (vrai ou faux).</p>`,
-      recall: { q: "Une alerte se déclenche pour un administrateur qui se connecte normalement. VP, FP, VN ou FN ?",
-        a: "Faux positif : le modèle a prédit « attaque » (positif) et il avait tort (faux)." } },
+      html: `<p>Prenons un modèle qui aide à dépister le paludisme au dispensaire. La classe « positive » est : la personne a le paludisme.</p><div class="table-wrap"><table class="confusion"><thead><tr><th></th><th>Prédit : paludisme</th><th>Prédit : pas malade</th></tr></thead><tbody><tr><th>A vraiment le paludisme</th><td><strong>VP</strong> vrai positif<br><span class="note">malade repéré</span></td><td><strong>FN</strong> faux négatif<br><span class="note">malade raté</span></td></tr><tr><th>N'a pas le paludisme</th><td><strong>FP</strong> faux positif<br><span class="note">fausse alerte</span></td><td><strong>VN</strong> vrai négatif<br><span class="note">personne saine rassurée</span></td></tr></tbody></table></div><p>Pour lire le nom : le second mot dit ce que le modèle a prédit (positif ou négatif), le premier dit s'il avait raison (vrai ou faux).</p>`,
+      recall: { q: "Le modèle annonce « paludisme » pour un enfant qui n'a qu'un rhume. VP, FP, VN ou FN ?",
+        a: "Faux positif : le modèle a prédit « paludisme » (positif) et il avait tort (faux)." } },
     { title: "Précision et rappel",
       html: `<p class="formula">Précision = VP / (VP + FP)</p><p>Quand le modèle crie au loup, combien de fois y a-t-il vraiment un loup ?</p><p class="formula">Rappel = VP / (VP + FN)</p><p>Sur tous les loups qui sont venus, combien le modèle en a-t-il vus ?</p><p class="mnemo"><strong>Moyen mnémotechnique.</strong> Au dénominateur de la <strong>P</strong>récision : tout ce qui a été <strong>P</strong>rédit positif. Au dénominateur du <strong>R</strong>appel : tout ce qui était <strong>R</strong>éellement positif.</p>`,
-      recall: { q: "80 attaques réelles. Le modèle émet 100 alertes, dont 60 correspondent à de vraies attaques. Précision ? Rappel ?",
+      recall: { q: "80 personnes ont vraiment le paludisme. Le modèle en déclare 100 positives, dont 60 sont vraiment malades. Précision ? Rappel ?",
         a: "VP = 60, FP = 40, FN = 20. Précision = 60 / 100 = 0,60. Rappel = 60 / 80 = 0,75." } },
     { title: "Le compromis, en direct",
-      html: `<p>Chaque point est une connexion, placée selon le score donné par le modèle. Tout ce qui est à droite du seuil déclenche une alerte. <strong>Avant de bouger le curseur</strong>, prédis : si tu baisses le seuil, la précision monte ou descend ? Et le rappel ?</p>`,
+      html: `<p>Chaque point est une personne testée, placée selon le score donné par le modèle. Tout ce qui est à droite du seuil est déclaré « positif ». <strong>Avant de bouger le curseur</strong>, prédis : si tu baisses le seuil, la précision monte ou descend ? Et le rappel ?</p>`,
       demo: "threshold",
-      after: `<p>Baisser le seuil attrape plus d'attaques (rappel ↑) mais produit plus de fausses alertes (précision ↓). Monter le seuil fait l'inverse. Il n'existe pas de seuil parfait, seulement un seuil adapté au coût des erreurs.</p>`,
-      recall: { q: "Dans un SOC, les analystes sont débordés par les fausses alertes. Tu montes ou tu baisses le seuil ? Qu'est-ce que tu risques ?",
-        a: "On monte le seuil pour réduire les faux positifs (précision ↑). Le risque : rater davantage de vraies attaques (rappel ↓)." } },
+      after: `<p>Baisser le seuil repère plus de malades (rappel ↑) mais produit plus de fausses alertes (précision ↓). Monter le seuil fait l'inverse. Il n'existe pas de seuil parfait, seulement un seuil adapté au coût des erreurs.</p>`,
+      recall: { q: "Au dispensaire, trop de personnes saines sont envoyées faire des examens inutiles. Tu montes ou tu baisses le seuil ? Qu'est-ce que tu risques ?",
+        a: "On monte le seuil pour réduire les faux positifs (précision ↑). Le risque : rater davantage de vrais malades (rappel ↓)." } },
     { title: "Le score F1",
       html: `<p>Pour résumer précision et rappel en un seul nombre, on prend leur <strong>moyenne harmonique</strong> :</p><p class="formula">F1 = 2 · (précision · rappel) / (précision + rappel)</p><p>La moyenne harmonique punit les déséquilibres : une précision de 1,0 et un rappel de 0,1 donnent une moyenne simple de 0,55, mais un F1 d'environ 0,18. Un bon F1 exige que les deux soient bons.</p>`,
       recall: { q: "Précision 0,60 et rappel 0,75 : calcule le F1.", a: "F1 = 2 × 0,60 × 0,75 / (0,60 + 0,75) = 0,9 / 1,35 ≈ 0,67." } },
@@ -265,28 +265,28 @@ const MODULES = [
       recall: { q: "Erreurs de 1, 1 et 4 points. MAE ? RMSE ?",
         a: "MAE = (1 + 1 + 4) / 3 = 2. MSE = (1 + 1 + 16) / 3 = 6, donc RMSE = √6 ≈ 2,45. La RMSE est plus grande car l'erreur de 4 pèse lourd." } }
   ],
-  feynman: { prompt: "Explique à un collègue du SOC pourquoi « 99 % d'accuracy » ne suffit pas pour juger un détecteur d'intrusion, et quelles métriques regarder.",
-    points: ["Les classes sont déséquilibrées : prédire toujours « normal » donne une accuracy élevée", "Précision : parmi les alertes, combien sont de vraies attaques", "Rappel : parmi les vraies attaques, combien sont détectées", "Le seuil règle le compromis ; le F1 résume les deux"] },
+  feynman: { prompt: "Explique à un infirmier pourquoi « 99 % d'accuracy » ne suffit pas pour juger un modèle de dépistage du paludisme, et quelles métriques regarder.",
+    points: ["Les classes sont déséquilibrées : prédire toujours « pas malade » donne une accuracy élevée", "Précision : parmi les personnes déclarées positives, combien sont vraiment malades", "Rappel : parmi les vrais malades, combien sont repérés", "Le seuil règle le compromis ; le F1 résume les deux"] },
   quiz: [
     { id: "m5q1", type: "mcq", q: "Rappel = ?", options: ["VP / (VP + FP)", "VP / (VP + FN)", "(VP + VN) / total", "VN / (VN + FP)"], answer: 1,
       explain: "Au dénominateur du Rappel : tout ce qui était Réellement positif, soit VP + FN." },
-    { id: "m5q2", type: "mcq", q: "Pour un détecteur de ransomware, où rater une attaque coûte extrêmement cher, quelle métrique surveiller en priorité ?", options: ["La précision", "Le rappel", "L'accuracy", "La MAE"], answer: 1,
-      explain: "Rater une attaque = un faux négatif. Le rappel mesure justement la part des vraies attaques détectées." },
+    { id: "m5q2", type: "mcq", q: "Pour dépister le paludisme grave chez les enfants, où rater un malade coûte extrêmement cher, quelle métrique surveiller en priorité ?", options: ["La précision", "Le rappel", "L'accuracy", "La MAE"], answer: 1,
+      explain: "Rater un malade = un faux négatif. Le rappel mesure justement la part des vrais malades repérés." },
     { id: "m5q3", type: "mcq", q: "Un modèle a 50 VP, 50 FP et 0 FN. Sa précision et son rappel valent :", options: ["0,5 et 1,0", "1,0 et 0,5", "0,5 et 0,5", "1,0 et 1,0"], answer: 0,
       explain: "Précision = 50 / (50 + 50) = 0,5. Rappel = 50 / (50 + 0) = 1,0 : il trouve tout, mais une alerte sur deux est fausse." },
     { id: "m5q4", type: "mcq", q: "Pourquoi l'accuracy est-elle trompeuse avec des classes très déséquilibrées ?", options: ["Elle est difficile à calculer", "Un modèle qui prédit toujours la classe majoritaire obtient un score élevé sans rien détecter", "Elle ne fonctionne qu'en régression", "Elle ignore les vrais négatifs"], answer: 1,
-      explain: "Avec 99 % de trafic normal, répondre toujours « normal » donne 99 % d'accuracy et zéro attaque détectée." },
+      explain: "Avec 99 % de personnes saines, répondre toujours « pas malade » donne 99 % d'accuracy et zéro malade repéré." },
     { id: "m5q5", type: "open", q: "Sur papier, dessine de mémoire la matrice de confusion avec VP, FP, FN et VN, puis écris les formules de la précision et du rappel.",
-      a: "Lignes = la réalité (attaque, normal), colonnes = la prédiction (attaque, normal). VP en haut à gauche, FN en haut à droite, FP en bas à gauche, VN en bas à droite. Précision = VP / (VP + FP). Rappel = VP / (VP + FN)." }
+      a: "Lignes = la réalité (malade, pas malade), colonnes = la prédiction (malade, pas malade). VP en haut à gauche, FN en haut à droite, FP en bas à gauche, VN en bas à droite. Précision = VP / (VP + FP). Rappel = VP / (VP + FN)." }
   ],
   keypoints: ["Que signifient VP, FP, FN et VN ?", "Quelles sont les formules de la précision et du rappel ?", "Que se passe-t-il quand on baisse le seuil ?", "Pourquoi l'accuracy trompe-t-elle sur des classes déséquilibrées ?"],
   cards: [
     { id: "m5c1", f: "Faux positif (FP) ?", b: "Le modèle prédit « positif » (alerte) et il a tort : une fausse alerte." },
-    { id: "m5c2", f: "Faux négatif (FN) ?", b: "Le modèle prédit « négatif » et il a tort : une attaque ratée." },
-    { id: "m5c3", f: "Formule et sens de la précision ?", b: "VP / (VP + FP). Parmi les alertes, la part de vraies attaques." },
-    { id: "m5c4", f: "Formule et sens du rappel ?", b: "VP / (VP + FN). Parmi les vraies attaques, la part détectée." },
+    { id: "m5c2", f: "Faux négatif (FN) ?", b: "Le modèle prédit « négatif » et il a tort : un malade raté." },
+    { id: "m5c3", f: "Formule et sens de la précision ?", b: "VP / (VP + FP). Parmi les personnes déclarées positives, la part de vrais malades." },
+    { id: "m5c4", f: "Formule et sens du rappel ?", b: "VP / (VP + FN). Parmi les vrais malades, la part repérée." },
     { id: "m5c5", f: "Formule du F1 ?", b: "F1 = 2 · P · R / (P + R), la moyenne harmonique de la précision et du rappel." },
-    { id: "m5c6", f: "Baisser le seuil de décision : effet ?", b: "Rappel ↑, précision ↓ (plus d'alertes, donc plus de fausses alertes)." },
+    { id: "m5c6", f: "Baisser le seuil de décision : effet ?", b: "Rappel ↑, précision ↓ (plus de personnes déclarées positives, donc plus de fausses alertes)." },
     { id: "m5c7", f: "Piège de l'accuracy ?", b: "Avec des classes déséquilibrées, prédire toujours la classe majoritaire donne un score élevé sans rien détecter." },
     { id: "m5c8", f: "MAE ou RMSE ?", b: "MAE : moyenne des |erreurs|. RMSE : racine de la MSE, pénalise davantage les grosses erreurs. Toutes deux dans l'unité du label." }
   ]
@@ -372,9 +372,9 @@ const MODULES = [
       html: `<p>Quand chaque exemple a des dizaines de features, beaucoup sont redondantes. L'<strong>analyse en composantes principales</strong> (PCA) cherche de nouvelles directions, combinaisons des features d'origine, qui capturent le plus de variation possible. On garde les premières et on laisse tomber les autres.</p><p>Usages : visualiser des données en 2D, accélérer un modèle, réduire le bruit. Image : photographier un objet 3D sous l'angle qui montre le mieux sa forme.</p>`,
       recall: { q: "Que cherche la première composante principale ?", a: "La direction selon laquelle les données varient le plus, c'est-à-dire où elles sont le plus étalées." } },
     { title: "Détecter les anomalies",
-      html: `<p>Idée : apprendre à quoi ressemble le « normal », puis signaler ce qui s'en écarte trop. Méthodes courantes : distance au centre du groupe le plus proche, densité locale (un point isolé est suspect), ou <em>isolation forest</em> (un point qu'on isole avec très peu de découpes aléatoires est probablement anormal).</p><p>En cybersécurité : un compte qui télécharge 50 fois plus que d'habitude, une connexion depuis un pays jamais vu. Une anomalie n'est pas forcément une attaque : c'est un signal à investiguer.</p>`,
-      recall: { q: "Pourquoi une anomalie détectée ne prouve-t-elle pas une attaque ?",
-        a: "Parce qu'elle signale seulement un comportement inhabituel, qui peut avoir une explication légitime (un employé en voyage, une sauvegarde exceptionnelle). C'est à l'analyste d'investiguer." } }
+      html: `<p>Idée : apprendre à quoi ressemble le « normal », puis signaler ce qui s'en écarte trop. Méthodes courantes : distance au centre du groupe le plus proche, densité locale (un point isolé est suspect), ou <em>isolation forest</em> (un point qu'on isole avec très peu de découpes aléatoires est probablement anormal).</p><p>Exemples : un foyer dont la consommation d'électricité triple d'un mois à l'autre, un retrait d'argent très inhabituel sur un compte. Une anomalie n'est pas forcément un problème : c'est un signal à vérifier.</p>`,
+      recall: { q: "Pourquoi une anomalie détectée ne prouve-t-elle pas un problème ?",
+        a: "Parce qu'elle signale seulement un comportement inhabituel, qui peut avoir une explication normale (une fête de famille, un nouveau congélateur). C'est à un humain de vérifier." } }
   ],
   feynman: { prompt: "Explique k-means étape par étape à quelqu'un, puis explique comment tu choisirais k.",
     points: ["Choisir k et placer k centres", "Assigner chaque point au centre le plus proche", "Recentrer chaque centre à la moyenne de ses points, recommencer", "Choisir k avec la méthode du coude et le bon sens métier"] },
@@ -866,47 +866,47 @@ const MATHS = [
 },
 {
   id: "a6", num: 6, track: "maths", prepares: "m5", title: "Probabilités", short: "Conditionnelles et Bayes",
-  kind: "Concepts et calculs", method: "Tableaux de comptage, exemples de cybersécurité", minutes: 40,
+  kind: "Concepts et calculs", method: "Tableaux de comptage, exemples de dépistage", minutes: 40,
   objective: "Calculer une probabilité et une probabilité conditionnelle, utiliser la formule de Bayes, et lire une loi normale.",
   pre: {
-    q: "Un détecteur repère 99 % des attaques. Une alerte sonne. Y a-t-il 99 % de chances que ce soit une vraie attaque ?",
-    a: "Pas forcément. Si les attaques sont très rares, la plupart des alertes peuvent être fausses, même avec un bon détecteur. Ce piège classique se résout avec les probabilités conditionnelles et la formule de Bayes, que ce module explique."
+    q: "Un test repère 99 % des malades. Ton test est positif. Y a-t-il 99 % de chances que tu sois malade ?",
+    a: "Pas forcément. Si la maladie est rare, la plupart des tests positifs peuvent être faux, même avec un bon test. Ce piège classique se résout avec les probabilités conditionnelles et la formule de Bayes, que ce module explique."
   },
   blocks: [
     { title: "Une probabilité, c'est une proportion",
       html: `<p>Une probabilité est un nombre entre 0 (impossible) et 1 (certain). Quand tous les cas sont équiprobables :</p><p class="formula">P(A) = cas favorables / cas possibles</p><p>Un dé : P(pair) = 3 / 6 = 0,5. Et le contraire d'un événement : <code>P(non A) = 1 − P(A)</code>.</p>`,
-      ml: "Une sortie de classifieur comme « 70 % de chances que ce soit du phishing » est une probabilité.",
-      recall: { q: "Sur 200 connexions, 10 sont malveillantes. Quelle est la probabilité qu'une connexion prise au hasard soit malveillante ? Et normale ?", a: "10 / 200 = 0,05, soit 5 %. Normale : 1 − 0,05 = 0,95." } },
+      ml: "Une sortie de classifieur comme « 70 % de chances que ce SMS soit un spam » est une probabilité.",
+      recall: { q: "Sur 200 personnes testées, 10 ont le paludisme. Quelle est la probabilité qu'une personne prise au hasard soit malade ? Et pas malade ?", a: "10 / 200 = 0,05, soit 5 %. Pas malade : 1 − 0,05 = 0,95." } },
     { title: "ET, OU : combiner des événements",
       html: `<ul><li>Si A et B sont <strong>indépendants</strong> (l'un n'influence pas l'autre) : <code>P(A et B) = P(A) × P(B)</code>. Deux pièces : P(pile et pile) = 0,5 × 0,5 = 0,25.</li><li>En général : <code>P(A ou B) = P(A) + P(B) − P(A et B)</code>. On retire P(A et B), sinon ces cas seraient comptés deux fois.</li></ul>`,
       ml: "Le classifieur « Naive Bayes » suppose que les features sont indépendantes, pour pouvoir multiplier leurs probabilités : c'est la partie « naïve ».",
       recall: { q: "On lance deux dés. Quelle est la probabilité d'obtenir deux 6 ?", a: "Les deux dés sont indépendants : 1/6 × 1/6 = 1/36 ≈ 0,028." } },
     { title: "La probabilité conditionnelle",
-      html: `<p><code>P(A | B)</code> se lit « probabilité de A sachant B » : la probabilité de A <em>parmi les cas où B est vrai</em>.</p><p class="formula">P(A | B) = P(A et B) / P(B)</p><p>Exemple sur 1 000 connexions :</p><div class="table-wrap"><table><thead><tr><th></th><th class="num">Alerte</th><th class="num">Pas d'alerte</th><th class="num">Total</th></tr></thead><tbody><tr><td>Attaque</td><td class="num">18</td><td class="num">2</td><td class="num">20</td></tr><tr><td>Normal</td><td class="num">49</td><td class="num">931</td><td class="num">980</td></tr><tr><td>Total</td><td class="num">67</td><td class="num">933</td><td class="num">1 000</td></tr></tbody></table></div><ul><li>P(alerte | attaque) = 18 / 20 = 0,90 : on regarde la ligne des attaques.</li><li>P(attaque | alerte) = 18 / 67 ≈ 0,27 : on regarde la colonne des alertes.</li></ul>`,
+      html: `<p><code>P(A | B)</code> se lit « probabilité de A sachant B » : la probabilité de A <em>parmi les cas où B est vrai</em>.</p><p class="formula">P(A | B) = P(A et B) / P(B)</p><p>Exemple sur 1 000 personnes testées pendant une campagne de dépistage (chiffres inventés pour l'exemple) :</p><div class="table-wrap"><table><thead><tr><th></th><th class="num">Test positif</th><th class="num">Test négatif</th><th class="num">Total</th></tr></thead><tbody><tr><td>Malade</td><td class="num">18</td><td class="num">2</td><td class="num">20</td></tr><tr><td>Pas malade</td><td class="num">49</td><td class="num">931</td><td class="num">980</td></tr><tr><td>Total</td><td class="num">67</td><td class="num">933</td><td class="num">1 000</td></tr></tbody></table></div><ul><li>P(positif | malade) = 18 / 20 = 0,90 : on regarde la ligne des malades.</li><li>P(malade | positif) = 18 / 67 ≈ 0,27 : on regarde la colonne des tests positifs.</li></ul>`,
       ml: "Tu viens de calculer un rappel (0,90) et une précision (0,27) : ce sont deux probabilités conditionnelles. Tout le module 5 repose sur cette idée.",
-      recall: { q: "Avec ce tableau, pourquoi P(alerte | attaque) et P(attaque | alerte) sont-elles si différentes ?", a: "On ne divise pas par le même groupe : les 20 attaques dans un cas, les 67 alertes dans l'autre. Et comme le trafic normal est énorme, ses 49 fausses alertes pèsent lourd parmi les alertes." } },
+      recall: { q: "Avec ce tableau, pourquoi P(positif | malade) et P(malade | positif) sont-elles si différentes ?", a: "On ne divise pas par le même groupe : les 20 malades dans un cas, les 67 tests positifs dans l'autre. Et comme les personnes saines sont très nombreuses, leurs 49 faux positifs pèsent lourd parmi les tests positifs." } },
     { title: "La formule de Bayes",
-      html: `<p>Bayes permet de « retourner » une probabilité conditionnelle :</p><p class="formula">P(A | B) = P(B | A) × P(A) / P(B)</p><p>Avec le tableau précédent : P(attaque) = 20 / 1 000 = 0,02 ; P(alerte | attaque) = 0,90 ; P(alerte) = 67 / 1 000 = 0,067.</p><p>P(attaque | alerte) = 0,90 × 0,02 / 0,067 ≈ 0,27. On retrouve le même résultat que par comptage.</p><p>À retenir : quand A est rare (P(A) petite), même un bon détecteur donne beaucoup de fausses alertes.</p>`,
+      html: `<p>Bayes permet de « retourner » une probabilité conditionnelle :</p><p class="formula">P(A | B) = P(B | A) × P(A) / P(B)</p><p>Avec le tableau précédent : P(malade) = 20 / 1 000 = 0,02 ; P(positif | malade) = 0,90 ; P(positif) = 67 / 1 000 = 0,067.</p><p>P(malade | positif) = 0,90 × 0,02 / 0,067 ≈ 0,27. On retrouve le même résultat que par comptage.</p><p>À retenir : quand A est rare (P(A) petite), même un bon test donne beaucoup de fausses alertes.</p>`,
       ml: "Bayes sert à classer : on connaît, grâce aux données, la probabilité de voir certains mots dans un spam, P(mots | spam), et on veut P(spam | mots).",
-      recall: { q: "Un détecteur repère 90 % des attaques ; 1 % des connexions sont des attaques ; 10 % des connexions déclenchent une alerte. Quelle est la probabilité qu'une alerte soit une vraie attaque ?", a: "Bayes : 0,9 × 0,01 / 0,10 = 0,009 / 0,1 = 0,09. Seulement 9 % des alertes sont de vraies attaques." } },
+      recall: { q: "Un test repère 90 % des malades ; 1 % des personnes testées sont malades ; 10 % des tests sont positifs. Quelle est la probabilité qu'une personne testée positive soit vraiment malade ?", a: "Bayes : 0,9 × 0,01 / 0,10 = 0,009 / 0,1 = 0,09. Seulement 9 % des tests positifs correspondent à de vrais malades." } },
     { title: "Espérance et loi normale",
       html: `<p>L'<strong>espérance</strong> est la moyenne à long terme, chaque valeur pesée par sa probabilité : <code>E[X] = Σ x · P(x)</code>. Pour un dé : (1 + 2 + 3 + 4 + 5 + 6) / 6 = 3,5.</p><p>La <strong>loi normale</strong> est la courbe en cloche : centrée sur la moyenne μ, de largeur réglée par l'écart-type σ.</p>BELL_SVG<ul><li>environ 68 % des valeurs entre μ − σ et μ + σ ;</li><li>environ 95 % entre μ − 2σ et μ + 2σ ;</li><li>presque toutes (99,7 %) entre μ − 3σ et μ + 3σ.</li></ul>`,
       ml: "On suppose souvent que le bruit dans les données suit une loi normale. Et une valeur à plus de 3 écarts-types de la moyenne est un candidat classique pour la détection d'anomalies.",
-      recall: { q: "Les temps de réponse d'un serveur suivent une loi normale de moyenne 200 ms et d'écart-type 20 ms. Entre quelles valeurs se trouvent environ 95 % des temps ?", a: "μ ± 2σ = 200 ± 40, donc entre 160 et 240 ms. Un temps de 300 ms serait très inhabituel : une anomalie à examiner." } }
+      recall: { q: "Les temps de trajet d'un car Ouagadougou – Bobo-Dioulasso suivent une loi normale de moyenne 300 minutes et d'écart-type 20 minutes. Entre quelles valeurs se trouvent environ 95 % des trajets ?", a: "μ ± 2σ = 300 ± 40, donc entre 260 et 340 minutes. Un trajet de 400 minutes serait très inhabituel : une anomalie à examiner (panne, route coupée…)." } }
   ],
-  feynman: { prompt: "Explique, avec l'exemple du détecteur d'intrusion, la différence entre P(alerte | attaque) et P(attaque | alerte).",
-    points: ["Une probabilité est une proportion entre 0 et 1", "P(A | B) : la probabilité de A parmi les cas où B est vrai", "P(alerte | attaque) correspond au rappel, P(attaque | alerte) à la précision", "Si les attaques sont rares, même un bon détecteur produit beaucoup de fausses alertes (Bayes)"] },
+  feynman: { prompt: "Explique, avec l'exemple du test de dépistage du paludisme, la différence entre P(positif | malade) et P(malade | positif).",
+    points: ["Une probabilité est une proportion entre 0 et 1", "P(A | B) : la probabilité de A parmi les cas où B est vrai", "P(positif | malade) correspond au rappel, P(malade | positif) à la précision", "Si la maladie est rare, même un bon test produit beaucoup de fausses alertes (Bayes)"] },
   quiz: [
     { id: "a6q1", type: "mcq", q: "P(A) = 0,3. Que vaut P(non A) ?", options: ["0,3", "0,7", "1,3", "0"], answer: 1,
       explain: "P(non A) = 1 − P(A) = 1 − 0,3 = 0,7." },
     { id: "a6q2", type: "mcq", q: "On lance une pièce deux fois. Probabilité d'obtenir pile les deux fois ?", options: ["0,5", "0,25", "1", "0,75"], answer: 1,
       explain: "Les lancers sont indépendants : 0,5 × 0,5 = 0,25." },
-    { id: "a6q3", type: "mcq", q: "Dans un détecteur d'intrusion, la précision correspond à :", options: ["P(alerte | attaque)", "P(attaque | alerte)", "P(attaque)", "P(alerte)"], answer: 1,
-      explain: "La précision : parmi les alertes, la part de vraies attaques. Le rappel, c'est P(alerte | attaque)." },
+    { id: "a6q3", type: "mcq", q: "Pour un test de dépistage, la précision correspond à :", options: ["P(positif | malade)", "P(malade | positif)", "P(malade)", "P(positif)"], answer: 1,
+      explain: "La précision : parmi les tests positifs, la part de vrais malades. Le rappel, c'est P(positif | malade)." },
     { id: "a6q4", type: "mcq", q: "Pour une loi normale, quelle part des valeurs se trouve environ entre μ − 2σ et μ + 2σ ?", options: ["50 %", "68 %", "95 %", "100 %"], answer: 2,
       explain: "Règle 68-95-99,7 : 68 % à un écart-type, 95 % à deux, 99,7 % à trois." },
-    { id: "a6q5", type: "open", q: "Explique avec tes mots pourquoi un détecteur qui repère 99 % des attaques peut quand même produire surtout de fausses alertes.",
-      a: "Parce que les attaques sont rares : le trafic normal est si nombreux que même un petit pourcentage de fausses alertes sur lui dépasse le nombre de vraies attaques détectées. P(alerte | attaque) est élevée, mais P(attaque | alerte) peut rester faible (formule de Bayes)." }
+    { id: "a6q5", type: "open", q: "Explique avec tes mots pourquoi un test qui repère 99 % des malades peut quand même produire surtout de faux positifs.",
+      a: "Parce que la maladie est rare : les personnes saines sont si nombreuses que même un petit pourcentage d'erreurs sur elles dépasse le nombre de vrais malades repérés. P(positif | malade) est élevée, mais P(malade | positif) peut rester faible (formule de Bayes)." }
   ],
   keypoints: ["Que vaut P(non A) ?", "Comment calcule-t-on P(A | B) avec un tableau de comptage ?", "Que dit la formule de Bayes ?", "Que dit la règle 68-95-99,7 ?"],
   cards: [
@@ -914,7 +914,7 @@ const MATHS = [
     { id: "a6c2", f: "P(A et B) si A et B sont indépendants ?", b: "P(A) × P(B)." },
     { id: "a6c3", f: "Probabilité conditionnelle P(A | B) ?", b: "P(A et B) / P(B) : la probabilité de A parmi les cas où B est vrai." },
     { id: "a6c4", f: "Formule de Bayes ?", b: "P(A | B) = P(B | A) × P(A) / P(B)." },
-    { id: "a6c5", f: "Précision et rappel en probabilités ?", b: "Précision = P(attaque | alerte). Rappel = P(alerte | attaque)." },
+    { id: "a6c5", f: "Précision et rappel en probabilités ?", b: "Précision = P(malade | positif). Rappel = P(positif | malade)." },
     { id: "a6c6", f: "Règle 68-95-99,7 ?", b: "Loi normale : 68 % des valeurs à ±1σ de la moyenne, 95 % à ±2σ, 99,7 % à ±3σ." },
     { id: "a6c7", f: "Espérance E[X] ?", b: "Σ x · P(x) : la moyenne à long terme. Pour un dé, 3,5." }
   ]

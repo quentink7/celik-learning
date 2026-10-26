@@ -46,7 +46,7 @@ m1: {
       steps: `<ol>
 <li><strong>Clustering</strong> : un restaurant regroupe ses clients selon leurs habitudes (heure de visite, montant, fréquence). Il découvre trois profils : « déjeuner de bureau », « famille du week-end », « soirée entre amis ». Il peut adapter sa communication à chacun.</li>
 <li><strong>Réduction de dimension</strong> : un fichier a 300 colonnes ; on le résume en 2 pour pouvoir le dessiner sur un graphique.</li>
-<li><strong>Anomalies</strong> : un SOC apprend à quoi ressemble le trafic réseau normal d'une entreprise, puis signale ce qui ne lui ressemble pas.</li></ol>`,
+<li><strong>Anomalies</strong> : la société d'électricité apprend à quoi ressemble la consommation normale de chaque quartier, puis signale les compteurs qui s'en écartent beaucoup (fuite, compteur défectueux…).</li></ol>`,
       pitfall: `<p>Croire que les groupes trouvés ont forcément un sens. L'algorithme trouvera toujours des groupes, même dans des données sans structure. C'est à toi de vérifier qu'ils veulent dire quelque chose.</p>`
     },
     "Renforcement : essais, erreurs, récompenses": {

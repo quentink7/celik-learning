@@ -446,6 +446,8 @@ p code,li code,td code,.box code,.answer,.example{overflow-wrap:anywhere}
 
 /* ---------- Cours SQL : résultats de requêtes, schéma, source ---------- */
 .box.source{background:var(--bissap-soft); --tagc:var(--bissap)}
+.box.source.python{background:var(--millet-soft); --tagc:#8A6200}
+.box.source.ml{background:var(--indigo-soft); --tagc:var(--indigo)}
 .sqlres{margin-top:-.25rem; border:1px solid var(--line); border-top:0; border-radius:0 0 var(--r) var(--r); background:var(--surface); padding:.5rem .75rem .625rem}
 .lesson pre.sqlx{border-radius:var(--r) var(--r) 0 0}
 .sqlres-head{display:flex; justify-content:space-between; align-items:center; gap:.5rem; flex-wrap:wrap; font-family:var(--f-display); font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}

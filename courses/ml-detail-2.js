@@ -183,7 +183,7 @@ m3: {
 
 /* ================================================================ */
 a5: {
-  intro: `<p>Pour classer (spam ou pas, attaque ou pas), un modèle doit donner une <strong>probabilité</strong> entre 0 et 1. Ce module présente les trois outils qui le permettent : l'exponentielle, le logarithme et la sigmoïde. Tu n'as pas à faire ces calculs à la main dans la vraie vie (Python les fait), mais tu dois comprendre leur comportement.</p>`,
+  intro: `<p>Pour classer (spam ou pas, malade ou pas), un modèle doit donner une <strong>probabilité</strong> entre 0 et 1. Ce module présente les trois outils qui le permettent : l'exponentielle, le logarithme et la sigmoïde. Tu n'as pas à faire ces calculs à la main dans la vraie vie (Python les fait), mais tu dois comprendre leur comportement.</p>`,
   blocks: {
     "Puissances et exponentielle": {
       plain: `<p>L'exponentielle, c'est la croissance « boule de neige » : plus il y a, plus ça augmente vite. Une rumeur que chaque personne répète à deux autres chaque jour : 1, 2, 4, 8, 16… L'important à retenir pour le ML : eˣ est <strong>toujours positif</strong>, devient énorme quand x est grand, et minuscule (proche de 0) quand x est très négatif.</p>`,

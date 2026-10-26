@@ -57,7 +57,7 @@ print("ssh" in "tentative ssh échouée")   # True : in teste si un texte en con
 /* ------------------------------------------------------------------ */
 { id: "p07", title: "Prendre des décisions : if, elif, else", minutes: 30,
   goal: "Exécuter du code seulement quand une condition est vraie, et choisir entre plusieurs cas.",
-  why: `<p>Un programme qui fait toujours la même chose est limité. Avec <code>if</code>, il s'adapte : afficher « mot de passe faible » ou « fort », bloquer une IP ou la laisser passer, donner « admis » ou « recalé ».</p>`,
+  why: `<p>Un programme qui fait toujours la même chose est limité. Avec <code>if</code>, il s'adapte : afficher « mot de passe faible » ou « fort », appliquer une réduction ou non, donner « admis » ou « recalé ».</p>`,
   sections: [
     { h: "La structure de base",
       html: `<pre><code>note = 14
@@ -90,13 +90,14 @@ else:
 <li><code>14 &gt;= 12</code> ? Oui → on affiche « Bien »…</li>
 <li>… et <strong>on sort</strong> : les cas suivants ne sont même pas testés, même si <code>14 &gt;= 10</code> est aussi vrai.</li></ol></div>
 <div class="box why"><b class="tag">À retenir</b><p>Python teste les conditions <strong>dans l'ordre</strong> et s'arrête à la première vraie. L'ordre compte : si tu mets <code>note &gt;= 10</code> en premier, tout le monde au-dessus de 10 aura « Admis », même avec 19.</p></div>` },
-    { h: "Un exemple de sécurité",
-      html: `<pre><code>tentatives = 6
-if tentatives &gt;= 5:
-    print("Compte bloqué")
-    print("Alerte envoyée au SOC")
+    { h: "Un bloc de plusieurs lignes",
+      html: `<pre><code>solde = 3000
+prix = 5000
+if solde &lt; prix:
+    print("Solde insuffisant")
+    print("Recharge ton compte avant d'acheter")
 else:
-    print(f"Il reste {5 - tentatives} essais")</code></pre>
+    print(f"Achat validé, il te reste {solde - prix} F")</code></pre>
 <p>Les deux <code>print</code> décalés sous le <code>if</code> forment un bloc : ils s'exécutent ensemble.</p>` }
   ],
   pitfalls: [
@@ -112,17 +113,17 @@ else:
     { q: "À quoi sert l'indentation ?", options: ["À faire joli", "À indiquer quelles lignes font partie du bloc", "À commenter", "À accélérer le programme"], answer: 1, explain: "En Python, le décalage définit les blocs. Il change le sens du programme." }
   ],
   exercise: {
-    task: `On juge un mot de passe à sa longueur, obtenue avec <code>len(mdp)</code>. Affiche <code>faible</code> s'il a moins de 8 caractères, <code>moyen</code> de 8 à 11, <code>fort</code> à partir de 12. Avec <code>mdp = "Soc2026!"</code> (8 caractères), on attend <code>moyen</code>.`,
+    task: `On juge un mot de passe à sa longueur, obtenue avec <code>len(mdp)</code>. Affiche <code>faible</code> s'il a moins de 8 caractères, <code>moyen</code> de 8 à 11, <code>fort</code> à partir de 12. Avec <code>mdp = "Ouaga26!"</code> (8 caractères), on attend <code>moyen</code>.`,
     hint: `if len(mdp) < 8: ... elif len(mdp) < 12: ... else: ...`,
-    start: `mdp = "Soc2026!"\nprint(len(mdp))  # tu peux retirer cette ligne ensuite\n\n`,
-    sol: `mdp = "Soc2026!"\nif len(mdp) < 8:\n    print("faible")\nelif len(mdp) < 12:\n    print("moyen")\nelse:\n    print("fort")`,
+    start: `mdp = "Ouaga26!"\nprint(len(mdp))  # tu peux retirer cette ligne ensuite\n\n`,
+    sol: `mdp = "Ouaga26!"\nif len(mdp) < 8:\n    print("faible")\nelif len(mdp) < 12:\n    print("moyen")\nelse:\n    print("fort")`,
     check: (o, c) => { const last = o.trim().split("\n").pop().trim(); if (last !== "moyen") return "Avec \"Soc2026!\" (8 caractères), la dernière ligne affichée doit être moyen."; if (!/elif/.test(c) || !/else/.test(c)) return "Utilise if, elif et else."; return true; }
   }
 },
 /* ------------------------------------------------------------------ */
 { id: "p08", title: "Répéter : la boucle for et range()", minutes: 30,
   goal: "Répéter des instructions un nombre précis de fois, et parcourir une suite de nombres.",
-  why: `<p>Afficher 100 lignes, analyser 10 000 entrées de log, tester chaque port d'une liste : sans boucle, il faudrait recopier le code des milliers de fois. La boucle <code>for</code> répète le travail à ta place.</p>`,
+  why: `<p>Afficher 100 lignes, calculer la moyenne de 10 000 élèves, envoyer un SMS à chaque client : sans boucle, il faudrait recopier le code des milliers de fois. La boucle <code>for</code> répète le travail à ta place.</p>`,
   sections: [
     { h: "Répéter n fois",
       html: `<pre><code>for i in range(3):
@@ -160,11 +161,10 @@ print(total)   # 10</code></pre>
 <p>Remarque : le <code>print(total)</code> n'est <strong>pas</strong> indenté. Il s'exécute une seule fois, après la boucle. Indenté, il afficherait le total à chaque tour.</p>` },
     { h: "Parcourir un texte",
       html: `<p><code>for</code> sait parcourir autre chose que des nombres. Sur un texte, il donne chaque caractère :</p>
-<pre><code>for lettre in "SOC":
+<pre><code>for lettre in "BF":
     print(lettre)
-# S
-# O
-# C</code></pre>
+# B
+# F</code></pre>
 <p>Tu verras dans la partie suivante qu'on parcourt surtout des <strong>listes</strong>.</p>` }
   ],
   pitfalls: [
@@ -189,7 +189,7 @@ print(total)   # 10</code></pre>
 /* ------------------------------------------------------------------ */
 { id: "p09", title: "Répéter tant que : la boucle while", minutes: 25,
   goal: "Répéter tant qu'une condition est vraie, quand on ne sait pas d'avance combien de tours il faudra.",
-  why: `<p>« Redemande le mot de passe tant qu'il est faux », « attends tant que le serveur ne répond pas » : on ne connaît pas le nombre de tours à l'avance. C'est le travail de <code>while</code>.</p>`,
+  why: `<p>« Redemande le mot de passe tant qu'il est faux », « continue d'épargner tant que tu n'as pas 50 000 F » : on ne connaît pas le nombre de tours à l'avance. C'est le travail de <code>while</code>.</p>`,
   sections: [
     { h: "for ou while ?",
       html: `<ul><li><code>for</code> : quand on sait <strong>sur quoi</strong> ou <strong>combien de fois</strong> boucler (10 fois, chaque ligne d'un fichier).</li>
@@ -211,7 +211,7 @@ print("Décollage !")</code></pre>
 while compteur &gt; 0:
     print(compteur)
     # oubli de compteur -= 1 : compteur reste à 3 pour toujours</code></pre>
-<div class="box why"><b class="tag">Règle de sécurité</b><p>Dans toute boucle <code>while</code>, vérifie qu'une ligne du bloc <strong>fait évoluer</strong> la condition vers False. Si ton programme ne s'arrête pas ici, clique sur « Arrêter ».</p></div>` },
+<div class="box why"><b class="tag">Règle d'or</b><p>Dans toute boucle <code>while</code>, vérifie qu'une ligne du bloc <strong>fait évoluer</strong> la condition vers False. Si ton programme ne s'arrête pas ici, clique sur « Arrêter ».</p></div>` },
     { h: "Sortir plus tôt : break",
       html: `<p><code>break</code> quitte la boucle immédiatement. Motif classique : demander jusqu'à obtenir la bonne réponse, avec un nombre d'essais limité.</p>
 <pre><code>essais = 0

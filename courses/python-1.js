@@ -60,7 +60,7 @@ print("7 + 3")   # affiche 7 + 3 (c'est du texte, pas un calcul)</code></pre>
 /* ------------------------------------------------------------------ */
 { id: "p02", title: "Les nombres et les calculs", minutes: 20,
   goal: "Faire des calculs avec Python : les quatre opérations, la puissance, la division entière et le reste.",
-  why: `<p>Calculer, c'est la base de presque tout programme : un total de panier, une moyenne de notes, un nombre de connexions par heure dans des logs. Python est une excellente calculatrice, à condition de connaître ses symboles.</p>`,
+  why: `<p>Calculer, c'est la base de presque tout programme : un total de panier, une moyenne de notes, la monnaie à rendre au marché. Python est une excellente calculatrice, à condition de connaître ses symboles.</p>`,
   sections: [
     { h: "Les opérations de base",
       html: `<div class="table-wrap"><table><thead><tr><th>Symbole</th><th>Opération</th><th>Exemple</th><th>Résultat</th></tr></thead><tbody>
@@ -106,7 +106,7 @@ print((2 + 3) * 4)   # 20  (les parenthèses passent d'abord : 5 * 4)</code></pr
     { q: "Que vaut 2 + 2 ** 3 ?", options: ["64", "10", "16", "12"], answer: 1, explain: "La puissance passe avant l'addition : 2 ** 3 = 8, puis 2 + 8 = 10." }
   ],
   exercise: {
-    task: `Un serveur a été allumé pendant <code>10000</code> secondes. Affiche sur <strong>trois lignes</strong> : le nombre d'heures entières, puis le nombre de minutes entières restantes, puis les secondes restantes. Résultat attendu : <code>2</code>, <code>46</code>, <code>40</code>.`,
+    task: `Un car a roulé pendant <code>10000</code> secondes entre Ouagadougou et Koudougou. Affiche sur <strong>trois lignes</strong> : le nombre d'heures entières, puis le nombre de minutes entières restantes, puis les secondes restantes. Résultat attendu : <code>2</code>, <code>46</code>, <code>40</code>.`,
     hint: `Heures : 10000 // 3600. Le reste en secondes : 10000 % 3600, soit 2800. Minutes : 2800 // 60. Secondes : 2800 % 60.`,
     start: `secondes = 10000\n# 1 heure = 3600 secondes, 1 minute = 60 secondes\n\n`,
     sol: `secondes = 10000\nprint(secondes // 3600)\nreste = secondes % 3600\nprint(reste // 60)\nprint(reste % 60)`,
@@ -116,7 +116,7 @@ print((2 + 3) * 4)   # 20  (les parenthèses passent d'abord : 5 * 4)</code></pr
 /* ------------------------------------------------------------------ */
 { id: "p03", title: "Les variables : donner un nom à une valeur", minutes: 25,
   goal: "Créer des variables, les modifier, et comprendre ce qui se passe dans la mémoire.",
-  why: `<p>Sans variables, il faudrait réécrire chaque valeur partout. Avec elles, on stocke une information une fois (un nom, un score, une adresse IP) et on la réutilise. C'est la brique de base de tous les programmes.</p>`,
+  why: `<p>Sans variables, il faudrait réécrire chaque valeur partout. Avec elles, on stocke une information une fois (un nom, un score, un numéro de téléphone) et on la réutilise. C'est la brique de base de tous les programmes.</p>`,
   sections: [
     { h: "Une étiquette collée sur une valeur",
       html: `<p>Une <strong>variable</strong> est un nom qui désigne une valeur. On la crée avec le signe <code>=</code> :</p>
@@ -160,7 +160,7 @@ print(a, b)</code></pre>
 <ul><li>lettres, chiffres et <code>_</code> seulement (pas d'espace, pas de tiret) ;</li>
 <li>ne pas commencer par un chiffre (<code>2eme</code> est interdit, <code>joueur2</code> est permis) ;</li>
 <li>majuscules et minuscules sont différentes : <code>Age</code> et <code>age</code> sont deux variables distinctes.</li></ul>
-<p>Bonnes habitudes : des noms <strong>qui disent ce qu'ils contiennent</strong> (<code>nb_connexions</code> plutôt que <code>x</code>), en minuscules, avec des <code>_</code> entre les mots. Évite les accents : ils sont permis, mais source d'erreurs de frappe.</p>` }
+<p>Bonnes habitudes : des noms <strong>qui disent ce qu'ils contiennent</strong> (<code>nb_eleves</code> plutôt que <code>x</code>), en minuscules, avec des <code>_</code> entre les mots. Évite les accents : ils sont permis, mais source d'erreurs de frappe.</p>` }
   ],
   pitfalls: [
     "Utiliser une variable avant de l'avoir créée : <code>print(total)</code> avant <code>total = ...</code> donne une <code>NameError</code>.",

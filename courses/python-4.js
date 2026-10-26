@@ -37,11 +37,11 @@ print(total)   # 1770.0</code></pre>
 
 print(moyenne(12, 15, 9))   # 12.0
 
-def alerte(message, niveau="INFO"):
-    return f"[{niveau}] {message}"
+def prix_total(prix, quantite=1):
+    return prix * quantite
 
-print(alerte("Disque plein"))              # [INFO] Disque plein
-print(alerte("Intrusion", "CRITIQUE"))     # [CRITIQUE] Intrusion</code></pre>
+print(prix_total(250))        # 250  (quantite vaut 1 par défaut)
+print(prix_total(250, 4))     # 1000</code></pre>
 <p>Les arguments sont associés aux paramètres <strong>dans l'ordre</strong>. Un paramètre avec <code>=</code> a une valeur par défaut : on peut l'omettre à l'appel.</p>` },
     { h: "Les variables d'une fonction restent dans la fonction",
       html: `<pre><code>def calcul():
@@ -146,65 +146,73 @@ except ZeroDivisionError:
   }
 },
 /* ------------------------------------------------------------------ */
-{ id: "p16", title: "Projet final : analyser des logs de connexion", minutes: 45,
-  goal: "Assembler tout le cours dans un vrai petit outil d'analyste SOC : détecter les IP suspectes.",
-  why: `<p>Un analyste SOC passe ses journées à lire des journaux (logs) pour repérer les comportements anormaux. Une attaque par force brute laisse une trace typique : beaucoup d'échecs de connexion depuis la même adresse IP. Tu vas écrire le programme qui la détecte.</p>`,
+{ id: "p16", title: "Projet final : le bulletin d'une classe", minutes: 45,
+  goal: "Assembler tout le cours dans un vrai petit outil : calculer les moyennes d'une classe et trouver les élèves à aider.",
+  why: `<p>À la fin du trimestre, un enseignant doit calculer la moyenne de chaque élève, à partir de dizaines de notes. À la main, c'est long et on se trompe facilement. Avec Python, c'est quelques lignes, et le même programme marche pour 10 élèves comme pour 500. Tu vas écrire ce programme, en utilisant presque tout ce que tu as appris.</p>`,
   sections: [
     { h: "Les données",
-      html: `<p>Chaque ligne du log a le format <code>date heure STATUT utilisateur ip</code> :</p>
-<pre><code>2026-10-12 08:00:01 OK awa 10.0.0.2
-2026-10-12 08:00:05 FAIL root 10.0.0.66
-2026-10-12 08:00:06 FAIL admin 10.0.0.66
+      html: `<p>Chaque ligne donne un élève, une matière et sa note sur 20 :</p>
+<pre><code>Awa maths 14
+Awa francais 12
+Moussa maths 8
+Salif francais abs
 ...</code></pre>
-<p>Dans l'exercice, ces lignes sont déjà dans une liste <code>LOGS</code>. Dans la vraie vie, elles viendraient d'un fichier, mais le traitement serait identique.</p>` },
+<p><code>abs</code> veut dire que l'élève était absent : ce n'est pas une note, il ne faut pas la compter. Dans l'exercice, ces lignes sont déjà dans une liste <code>NOTES</code>. Dans la vraie vie, elles viendraient d'un fichier, mais le traitement serait le même.</p>` },
     { h: "Découper le problème",
       html: `<p>Un gros problème se résout en petites étapes. Avant de coder, écris-les en français :</p>
 <div class="box steps"><b class="tag">Le plan</b><ol>
-<li>Parcourir chaque ligne de <code>LOGS</code> (<strong>for</strong>).</li>
-<li>Découper la ligne en champs (<strong>split</strong>).</li>
-<li>Si le statut est <code>FAIL</code> (<strong>if</strong>), compter un échec pour cette IP (<strong>dictionnaire compteur</strong>).</li>
-<li>Après la boucle, parcourir le compteur et garder les IP avec <strong>5 échecs ou plus</strong>.</li>
-<li>Les afficher, triées.</li></ol></div>
+<li>Parcourir chaque ligne de <code>NOTES</code> (<strong>for</strong>).</li>
+<li>Découper la ligne en morceaux (<strong>split</strong>) : le nom, la matière, la note.</li>
+<li>Transformer la note en nombre (<strong>int</strong>), et ignorer les absences grâce à <strong>try / except</strong>.</li>
+<li>Additionner les notes de chaque élève et compter combien il en a (deux <strong>dictionnaires</strong>).</li>
+<li>Après la boucle, calculer chaque moyenne et garder les élèves en dessous de <strong>10</strong>.</li>
+<li>Les afficher, triés par ordre alphabétique.</li></ol></div>
 <p>Chaque étape correspond à une leçon que tu as faite. Code-les une par une, et <strong>exécute après chaque étape</strong> avec des <code>print</code> pour vérifier où tu en es.</p>` },
     { h: "Squelette commenté",
-      html: `<pre><code>echecs = {}
-for ligne in LOGS:
-    champs = ligne.split()
-    statut = champs[2]
-    ip = champs[4]
-    if statut == "FAIL":
-        echecs[ip] = echecs.get(ip, 0) + 1
+      html: `<pre><code>totaux = {}
+nombres = {}
+for ligne in NOTES:
+    nom, matiere, texte = ligne.split()
+    try:
+        note = int(texte)
+    except ValueError:
+        continue               # "abs" : on passe à la ligne suivante
+    totaux[nom] = totaux.get(nom, 0) + note
+    nombres[nom] = nombres.get(nom, 0) + 1
 
-suspectes = []
-for ip, n in echecs.items():
-    if n &gt;= 5:
-        suspectes.append(ip)
-suspectes.sort()
-print(suspectes)</code></pre>
+a_aider = []
+for nom in totaux:
+    moyenne = totaux[nom] / nombres[nom]
+    if moyenne &lt; 10:
+        a_aider.append(nom)
+a_aider.sort()
+print(a_aider)</code></pre>
+<div class="box plain"><b class="tag">En clair</b><p><code>nom, matiere, texte = ligne.split()</code> range les trois morceaux dans trois variables d'un coup. Et <code>continue</code> saute directement au tour de boucle suivant : la note « abs » n'est ni additionnée ni comptée.</p></div>
 <p>Lis-le en te demandant, pour chaque ligne : <em>de quelle leçon vient cette idée ?</em> Ensuite, essaie de l'écrire <strong>sans regarder</strong> dans l'éditeur. Bloqué ? Regarde une seule ligne, referme, continue.</p>` },
     { h: "Pour aller plus loin",
-      html: `<ul><li>Mets la détection dans une fonction <code>detecter(logs, seuil=5)</code> qui renvoie la liste.</li>
-<li>Affiche aussi le nombre d'échecs de chaque IP suspecte : <code>10.0.0.66 : 7 échecs</code>.</li>
-<li>Repère les utilisateurs visés : <code>root</code> et <code>admin</code> sont des cibles classiques.</li>
-<li>Bonus SOC : une IP suspecte qui finit par un <code>OK</code>, c'est peut-être une attaque <strong>réussie</strong>. Comment la repérer ?</li></ul>` }
+      html: `<ul><li>Mets le calcul dans une fonction <code>moyennes(notes)</code> qui renvoie un dictionnaire <code>{nom: moyenne}</code>.</li>
+<li>Affiche chaque élève avec sa moyenne arrondie : <code>Awa : 14.0</code> (indice : <code>round(moyenne, 1)</code>).</li>
+<li>Écris une fonction <code>mention(moyenne)</code> : Très bien à partir de 16, Bien à partir de 14, Assez bien à partir de 12, Passable à partir de 10.</li>
+<li>Trouve le major de la classe, puis la moyenne de la classe en maths.</li></ul>` }
   ],
   pitfalls: [
     "Vouloir tout écrire d'un coup : avance étape par étape et exécute souvent.",
-    "Se tromper d'indice dans split : statut en 2, utilisateur en 3, IP en 4.",
-    "Faire la sélection des IP dans la première boucle : le compte n'est complet qu'après avoir lu toutes les lignes."
+    "Compter les absences comme des zéros : la moyenne de l'élève devient fausse. Une absence n'est pas une note.",
+    "Calculer les moyennes dans la première boucle : le total d'un élève n'est complet qu'après avoir lu toutes les lignes."
   ],
-  remember: ["Découper le problème en étapes écrites en français avant de coder.", "for + split + if + dictionnaire compteur : le motif de base de l'analyse de logs.", "Exécuter après chaque étape pour vérifier."],
+  remember: ["Découper le problème en étapes écrites en français avant de coder.", "for + split + try/except + dictionnaires : le motif de base pour analyser des données.", "Exécuter après chaque étape pour vérifier."],
   quiz: [
-    { q: "Pourquoi choisir les IP suspectes APRÈS la boucle de comptage ?", options: ["Parce que c'est plus joli", "Parce que le compte n'est complet qu'après avoir lu toutes les lignes", "Parce que Python l'exige"], answer: 1, explain: "Pendant la boucle, une IP peut encore recevoir des échecs supplémentaires." },
-    { q: "Quel motif compte les échecs par IP ?", options: ["liste.append(ip)", "echecs[ip] = echecs.get(ip, 0) + 1", "ip += 1", "len(ip)"], answer: 1, explain: "Le dictionnaire compteur associe à chaque IP son nombre d'échecs." }
+    { q: "Pourquoi calculer les moyennes APRÈS la boucle qui lit les notes ?", options: ["Parce que c'est plus joli", "Parce que le total d'un élève n'est complet qu'après avoir lu toutes les lignes", "Parce que Python l'exige"], answer: 1, explain: "Pendant la boucle, un élève peut encore recevoir des notes dans les lignes suivantes." },
+    { q: "Quelle ligne ajoute une note au total d'un élève ?", options: ["totaux.append(note)", "totaux[nom] = totaux.get(nom, 0) + note", "totaux += note", "len(totaux)"], answer: 1, explain: "Le dictionnaire associe à chaque nom son total ; get(nom, 0) donne 0 pour un élève pas encore vu." },
+    { q: "Salif a 12 en maths, abs en français et 9 en SVT. Quelle est sa moyenne si on ignore l'absence ?", options: ["7", "10.5", "21", "12"], answer: 1, explain: "On ne compte que les vraies notes : (12 + 9) / 2 = 10.5. Compter l'absence comme un 0 donnerait 7, ce qui est injuste." }
   ],
   exercise: {
-    task: `À partir de <code>LOGS</code> (déjà rempli), affiche la liste <strong>triée</strong> des IP qui ont <strong>5 échecs (FAIL) ou plus</strong>. On attend <code>['10.0.0.66', '10.0.0.91']</code>.`,
-    hint: `Suis le plan : compteur echecs = {} rempli dans une boucle for, puis une liste suspectes avec les IP où n >= 5, puis sort() et print.`,
-    start: `LOGS = [\n    "2026-10-12 08:00:01 OK awa 10.0.0.2",\n    "2026-10-12 08:00:05 FAIL root 10.0.0.66",\n    "2026-10-12 08:00:06 FAIL admin 10.0.0.66",\n    "2026-10-12 08:00:07 FAIL root 10.0.0.66",\n    "2026-10-12 08:00:09 FAIL root 10.0.0.91",\n    "2026-10-12 08:00:10 FAIL root 10.0.0.66",\n    "2026-10-12 08:00:12 FAIL test 10.0.0.66",\n    "2026-10-12 08:01:00 FAIL moussa 10.0.0.7",\n    "2026-10-12 08:01:02 OK moussa 10.0.0.7",\n    "2026-10-12 08:02:11 FAIL admin 10.0.0.91",\n    "2026-10-12 08:02:12 FAIL admin 10.0.0.91",\n    "2026-10-12 08:02:13 FAIL root 10.0.0.91",\n    "2026-10-12 08:02:15 FAIL root 10.0.0.91",\n    "2026-10-12 08:03:00 OK root 10.0.0.66",\n    "2026-10-12 08:04:41 FAIL awa 10.0.0.2",\n]\n\n# 1. Compter les échecs par IP\n\n# 2. Garder les IP avec 5 échecs ou plus, triées\n\n`,
+    task: `À partir de <code>NOTES</code> (déjà rempli), affiche la liste <strong>triée</strong> des élèves dont la moyenne est <strong>inférieure à 10</strong>. Les absences (<code>abs</code>) ne comptent pas comme des notes. On attend <code>['Ibrahim', 'Moussa']</code>.`,
+    hint: `Suis le plan : deux dictionnaires totaux et nombres remplis dans une boucle for (avec try / except ValueError pour sauter les « abs »), puis une liste a_aider avec les élèves dont totaux[nom] / nombres[nom] < 10, puis sort() et print.`,
+    start: `NOTES = [\n    "Awa maths 14",\n    "Awa francais 12",\n    "Awa svt 16",\n    "Moussa maths 8",\n    "Moussa francais 11",\n    "Moussa svt 7",\n    "Fatimata maths 17",\n    "Fatimata francais 15",\n    "Fatimata svt 18",\n    "Salif maths 12",\n    "Salif francais abs",\n    "Salif svt 9",\n    "Rasmata maths 10",\n    "Rasmata francais 9",\n    "Rasmata svt 12",\n    "Ibrahim maths 9",\n    "Ibrahim francais 10",\n    "Ibrahim svt 9",\n]\n\n# 1. Additionner et compter les notes de chaque élève (attention aux « abs »)\n\n# 2. Garder les élèves dont la moyenne est inférieure à 10, triés\n\n`,
     sol: null,
-    solTail: `echecs = {}\nfor ligne in LOGS:\n    champs = ligne.split()\n    if champs[2] == "FAIL":\n        ip = champs[4]\n        echecs[ip] = echecs.get(ip, 0) + 1\n\nsuspectes = []\nfor ip, n in echecs.items():\n    if n >= 5:\n        suspectes.append(ip)\nsuspectes.sort()\nprint(suspectes)`,
-    check: (o, c) => { const last = o.trim().split("\n").pop().replace(/\s/g, "").replace(/"/g, "'"); if (last !== "['10.0.0.66','10.0.0.91']") return "La dernière ligne doit être ['10.0.0.66', '10.0.0.91']. 10.0.0.66 a 5 échecs, 10.0.0.91 en a 5, les autres moins."; if (!/split/.test(c)) return "Utilise split() pour lire chaque ligne."; if (/print\(\s*\[\s*['"]10/.test(c)) return "Ne recopie pas le résultat : laisse ton programme le calculer."; return true; }
+    solTail: `totaux = {}\nnombres = {}\nfor ligne in NOTES:\n    nom, matiere, texte = ligne.split()\n    try:\n        note = int(texte)\n    except ValueError:\n        continue\n    totaux[nom] = totaux.get(nom, 0) + note\n    nombres[nom] = nombres.get(nom, 0) + 1\n\na_aider = []\nfor nom in totaux:\n    if totaux[nom] / nombres[nom] < 10:\n        a_aider.append(nom)\na_aider.sort()\nprint(a_aider)`,
+    check: (o, c) => { const last = o.trim().split("\n").pop().replace(/\s/g, "").replace(/"/g, "'"); if (last === "['Ibrahim','Moussa','Salif']") return "Salif ne devrait pas être dans la liste : son absence a été comptée comme un 0. Ignore les « abs » (try / except ValueError, puis continue)."; if (last !== "['Ibrahim','Moussa']") return "La dernière ligne doit être ['Ibrahim', 'Moussa']. Vérifie les moyennes : Moussa a 8.67, Ibrahim 9.33, Salif 10.5 (sans son absence)."; if (!/split/.test(c)) return "Utilise split() pour lire chaque ligne."; if (/print\(\s*\[\s*['"]Ibrahim/.test(c)) return "Ne recopie pas le résultat : laisse ton programme le calculer."; return true; }
   }
 }
   ]

@@ -5,7 +5,7 @@
 /* ------------------------------------------------------------------ */
 { id: "p10", title: "Les listes : plusieurs valeurs dans une variable", minutes: 30,
   goal: "Créer une liste, lire un élément par sa position, ajouter, modifier et retirer des éléments.",
-  why: `<p>Une variable par valeur, ça ne tient pas : pour 500 adresses IP, il faudrait 500 variables. Une <strong>liste</strong> range autant de valeurs qu'on veut, dans l'ordre, sous un seul nom.</p>`,
+  why: `<p>Une variable par valeur, ça ne tient pas : pour les notes de 500 élèves, il faudrait 500 variables. Une <strong>liste</strong> range autant de valeurs qu'on veut, dans l'ordre, sous un seul nom.</p>`,
   sections: [
     { h: "Créer une liste",
       html: `<pre><code>ports = [22, 80, 443]
@@ -64,7 +64,7 @@ print(sum(notes) / len(notes))  # 13.25 : la moyenne</code></pre>
 /* ------------------------------------------------------------------ */
 { id: "p11", title: "Parcourir et filtrer une liste", minutes: 30,
   goal: "Passer sur chaque élément d'une liste avec for, filtrer, compter et construire une nouvelle liste.",
-  why: `<p>Les vraies données arrivent sous forme de listes : des notes, des montants, des lignes de log. La compétence clé est de les parcourir pour <strong>calculer, compter ou trier</strong> ce qui t'intéresse.</p>`,
+  why: `<p>Les vraies données arrivent sous forme de listes : des notes, des montants, des ventes. La compétence clé est de les parcourir pour <strong>calculer, compter ou trier</strong> ce qui t'intéresse.</p>`,
   sections: [
     { h: "Parcourir directement les éléments",
       html: `<pre><code>montants = [1500, 300, 12000, 750]
@@ -115,7 +115,7 @@ en_milliers = [m / 1000 for m in montants]</code></pre>
     { q: "Pourquoi créer resultats = [] avant la boucle ?", options: ["Pour pouvoir y ajouter des éléments avec append", "Pour accélérer la boucle", "Ce n'est pas nécessaire"], answer: 0, explain: "On ne peut pas appeler append sur une liste qui n'existe pas encore." }
   ],
   exercise: {
-    task: `Voici les durées de connexion en minutes : <code>durees = [5, 120, 45, 300, 15, 90]</code>. Construis une liste <code>longues</code> avec les durées <strong>strictement supérieures à 60</strong>, puis affiche-la et affiche combien il y en a. On attend <code>[120, 300, 90]</code> puis <code>3</code>.`,
+    task: `Voici les durées de tes appels téléphoniques de la semaine, en minutes : <code>durees = [5, 120, 45, 300, 15, 90]</code>. Construis une liste <code>longues</code> avec les durées <strong>strictement supérieures à 60</strong>, puis affiche-la et affiche combien il y en a. On attend <code>[120, 300, 90]</code> puis <code>3</code>.`,
     hint: `longues = [] ; for d in durees: if d > 60: longues.append(d). Puis print(longues) et print(len(longues)).`,
     start: `durees = [5, 120, 45, 300, 15, 90]\n\n`,
     sol: `durees = [5, 120, 45, 300, 15, 90]\nlongues = []\nfor d in durees:\n    if d > 60:\n        longues.append(d)\nprint(longues)\nprint(len(longues))`,
@@ -125,7 +125,7 @@ en_milliers = [m / 1000 for m in montants]</code></pre>
 /* ------------------------------------------------------------------ */
 { id: "p12", title: "Les dictionnaires : associer une clé à une valeur", minutes: 30,
   goal: "Ranger des informations par nom plutôt que par position, et compter des occurrences.",
-  why: `<p>Une liste range par position (0, 1, 2…). Mais souvent on veut chercher par <strong>nom</strong> : le prix du « riz », le nombre d'échecs de l'IP « 10.0.0.5 ». C'est exactement ce que fait un <strong>dictionnaire</strong>.</p>`,
+  why: `<p>Une liste range par position (0, 1, 2…). Mais souvent on veut chercher par <strong>nom</strong> : le prix du « riz », le numéro de téléphone de « Moussa ». C'est exactement ce que fait un <strong>dictionnaire</strong>.</p>`,
   sections: [
     { h: "Créer et lire un dictionnaire",
       html: `<pre><code>menu = {"riz gras": 1500, "tô": 800, "poulet": 3500}
@@ -145,20 +145,20 @@ print(menu.get("pizza", 0))     # 0 : .get évite l'erreur si la clé manque</co
       html: `<pre><code>for plat, prix in menu.items():
     print(f"{plat} : {prix} F")</code></pre>
 <p><code>.items()</code> donne les paires (clé, valeur). Il existe aussi <code>.keys()</code> (les clés seules) et <code>.values()</code> (les valeurs seules).</p>` },
-    { h: "Le motif du compteur (très utile en cybersécurité)",
-      html: `<p>Compter combien de fois chaque élément apparaît :</p>
-<pre><code>ips = ["10.0.0.5", "10.0.0.9", "10.0.0.5", "10.0.0.5"]
+    { h: "Le motif du compteur (très utile)",
+      html: `<p>Compter combien de fois chaque élément apparaît. Par exemple, les votes pour élire le délégué de la classe :</p>
+<pre><code>votes = ["Awa", "Moussa", "Awa", "Awa"]
 compte = {}
-for ip in ips:
-    compte[ip] = compte.get(ip, 0) + 1
-print(compte)   # {'10.0.0.5': 3, '10.0.0.9': 1}</code></pre>
-<div class="trace"><table><thead><tr><th>Tour</th><th>ip</th><th>compte.get(ip, 0)</th><th>compte après</th></tr></thead><tbody>
-<tr><td>1</td><td>10.0.0.5</td><td>0 (absente)</td><td>{.5: 1}</td></tr>
-<tr><td>2</td><td>10.0.0.9</td><td>0 (absente)</td><td>{.5: 1, .9: 1}</td></tr>
-<tr><td>3</td><td>10.0.0.5</td><td>1</td><td>{.5: 2, .9: 1}</td></tr>
-<tr><td>4</td><td>10.0.0.5</td><td>2</td><td>{.5: 3, .9: 1}</td></tr>
+for nom in votes:
+    compte[nom] = compte.get(nom, 0) + 1
+print(compte)   # {'Awa': 3, 'Moussa': 1}</code></pre>
+<div class="trace"><table><thead><tr><th>Tour</th><th>nom</th><th>compte.get(nom, 0)</th><th>compte après</th></tr></thead><tbody>
+<tr><td>1</td><td>Awa</td><td>0 (absente)</td><td>{Awa: 1}</td></tr>
+<tr><td>2</td><td>Moussa</td><td>0 (absent)</td><td>{Awa: 1, Moussa: 1}</td></tr>
+<tr><td>3</td><td>Awa</td><td>1</td><td>{Awa: 2, Moussa: 1}</td></tr>
+<tr><td>4</td><td>Awa</td><td>2</td><td>{Awa: 3, Moussa: 1}</td></tr>
 </tbody></table></div>
-<p>C'est exactement ce que fait un analyste SOC pour repérer une IP qui tente des connexions en rafale.</p>` }
+<p>C'est le même motif pour compter des ventes par produit, des mots dans un texte ou des réponses à un sondage.</p>` }
   ],
   pitfalls: [
     "Lire une clé absente avec <code>d[cle]</code> : KeyError. Utilise <code>d.get(cle, defaut)</code> ou teste <code>cle in d</code> avant.",
@@ -182,7 +182,7 @@ print(compte)   # {'10.0.0.5': 3, '10.0.0.9': 1}</code></pre>
 /* ------------------------------------------------------------------ */
 { id: "p13", title: "Travailler avec du texte", minutes: 30,
   goal: "Nettoyer, découper et analyser du texte avec les méthodes des chaînes.",
-  why: `<p>Les logs, les emails, les fichiers CSV, les réponses d'utilisateurs : tout est du texte. Savoir le découper et le nettoyer est indispensable, en particulier pour un futur analyste SOC.</p>`,
+  why: `<p>Les SMS, les emails, les fichiers CSV, les réponses d'un formulaire : tout est du texte. Savoir le découper et le nettoyer est indispensable dès qu'on travaille avec de vraies données.</p>`,
   sections: [
     { h: "Une chaîne, c'est une suite de caractères",
       html: `<pre><code>s = "Python"
@@ -197,50 +197,50 @@ nom = nom.strip()   # là, oui</code></pre>` },
     { h: "Les méthodes à connaître",
       html: `<div class="table-wrap"><table><thead><tr><th>Méthode</th><th>Effet</th><th>Exemple → résultat</th></tr></thead><tbody>
 <tr><td><code>.strip()</code></td><td>enlève espaces et retours à la ligne au début et à la fin</td><td><code>"  ok \\n".strip()</code> → "ok"</td></tr>
-<tr><td><code>.lower()</code> / <code>.upper()</code></td><td>minuscules / majuscules</td><td><code>"Root".lower()</code> → "root"</td></tr>
+<tr><td><code>.lower()</code> / <code>.upper()</code></td><td>minuscules / majuscules</td><td><code>"OUAGA".lower()</code> → "ouaga"</td></tr>
 <tr><td><code>.replace(a, b)</code></td><td>remplace a par b</td><td><code>"1,5".replace(",", ".")</code> → "1.5"</td></tr>
-<tr><td><code>.startswith(x)</code></td><td>commence par x ?</td><td><code>"ERROR: disk".startswith("ERROR")</code> → True</td></tr>
+<tr><td><code>.startswith(x)</code></td><td>commence par x ?</td><td><code>"BF-226".startswith("BF")</code> → True</td></tr>
 <tr><td><code>.split(sep)</code></td><td>découpe en liste</td><td><code>"a;b;c".split(";")</code> → ["a", "b", "c"]</td></tr>
 <tr><td><code>sep.join(liste)</code></td><td>recolle une liste</td><td><code>"-".join(["a", "b"])</code> → "a-b"</td></tr>
 <tr><td><code>.count(x)</code></td><td>nombre d'apparitions</td><td><code>"banane".count("a")</code> → 3</td></tr>
 </tbody></table></div>` },
     { h: "split() : la méthode reine",
-      html: `<p>Une ligne de log ressemble souvent à ceci : des champs séparés par un caractère.</p>
-<pre><code>ligne = "2026-10-12 08:15:03 FAIL root 10.0.0.5"
+      html: `<p>Une ligne d'un relevé de compte (ou d'un fichier exporté) ressemble souvent à ceci : des champs séparés par un caractère.</p>
+<pre><code>ligne = "2026-10-12 08:15:03 DEPOT Awa 5000"
 champs = ligne.split(" ")
 print(champs)
-# ['2026-10-12', '08:15:03', 'FAIL', 'root', '10.0.0.5']
-statut = champs[2]
-ip = champs[4]
-print(statut, ip)   # FAIL 10.0.0.5</code></pre>
+# ['2026-10-12', '08:15:03', 'DEPOT', 'Awa', '5000']
+operation = champs[2]
+montant = champs[4]
+print(operation, montant)   # DEPOT 5000</code></pre>
 <div class="box steps"><b class="tag">Pas à pas</b><ol>
 <li><code>split(" ")</code> coupe la ligne à chaque espace et renvoie une <strong>liste</strong> de morceaux.</li>
-<li>Chaque morceau a un indice : la date est en 0, l'heure en 1, le statut en 2…</li>
+<li>Chaque morceau a un indice : la date est en 0, l'heure en 1, l'opération en 2…</li>
 <li>On récupère le champ voulu par son indice, comme dans n'importe quelle liste.</li></ol></div>
 <p>Sans argument, <code>split()</code> coupe sur n'importe quel blanc (plusieurs espaces, tabulations) : c'est souvent plus robuste.</p>` },
     { h: "Enchaîner les méthodes",
       html: `<p>Comme chaque méthode renvoie une chaîne, on peut les enchaîner de gauche à droite :</p>
-<pre><code>saisie = "  ADMIN \\n"
-print(saisie.strip().lower())   # admin</code></pre>
-<p>Python fait d'abord <code>strip()</code> (→ "ADMIN"), puis <code>lower()</code> sur le résultat (→ "admin").</p>` }
+<pre><code>saisie = "  OUAGADOUGOU \\n"
+print(saisie.strip().lower())   # ouagadougou</code></pre>
+<p>Python fait d'abord <code>strip()</code> (→ "OUAGADOUGOU"), puis <code>lower()</code> sur le résultat (→ "ouagadougou").</p>` }
   ],
   pitfalls: [
     "Appeler une méthode sans ranger le résultat : <code>s.upper()</code> seul ne change pas s.",
     "Oublier que split renvoie une liste : on accède ensuite aux morceaux par indice.",
-    "Comparer sans normaliser : \"Admin\" != \"admin\". Pense à .lower() et .strip()."
+    "Comparer sans normaliser : \"Ouaga\" != \"ouaga\". Pense à .lower() et .strip()."
   ],
   remember: ["Une chaîne ne se modifie pas : s = s.methode().", "strip, lower, replace pour nettoyer.", "split découpe en liste, join recolle.", "Les méthodes s'enchaînent : s.strip().lower()."],
   quiz: [
     { q: "Que donne \"a,b,c\".split(\",\") ?", options: ["\"abc\"", "[\"a\", \"b\", \"c\"]", "[\"a,b,c\"]", "3"], answer: 1, explain: "split coupe au séparateur et renvoie une liste." },
     { q: "s = \" Hi \". Après s.strip() (seul sur sa ligne), que vaut s ?", options: ["\"Hi\"", "\" Hi \"", "\"hi\""], answer: 1, explain: "Les chaînes ne se modifient pas : il fallait écrire s = s.strip()." },
-    { q: "Que donne \"Root\".lower() == \"root\" ?", options: ["True", "False"], answer: 0, explain: "lower met tout en minuscules avant la comparaison." }
+    { q: "Que donne \"Awa\".lower() == \"awa\" ?", options: ["True", "False"], answer: 0, explain: "lower met tout en minuscules avant la comparaison." }
   ],
   exercise: {
-    task: `Voici une ligne de log : <code>ligne = "2026-10-12 08:15:03 FAIL root 10.0.0.5"</code>. Avec <code>split()</code>, récupère l'utilisateur et l'IP, puis affiche exactement : <code>Échec pour root depuis 10.0.0.5</code>.`,
-    hint: `champs = ligne.split() ; user = champs[3] ; ip = champs[4] ; puis une f-string.`,
-    start: `ligne = "2026-10-12 08:15:03 FAIL root 10.0.0.5"\n\n`,
-    sol: `ligne = "2026-10-12 08:15:03 FAIL root 10.0.0.5"\nchamps = ligne.split()\nuser = champs[3]\nip = champs[4]\nprint(f"Échec pour {user} depuis {ip}")`,
-    check: (o, c) => { if (o.indexOf("Échec pour root depuis 10.0.0.5") < 0) return "La phrase attendue est : Échec pour root depuis 10.0.0.5 (avec l'accent sur le É)."; if (!/split/.test(c)) return "Utilise split() pour découper la ligne."; if (/print\([^)]*10\.0\.0\.5/.test(c)) return "Ne recopie pas l'IP à la main : prends-la dans la liste découpée."; return true; }
+    task: `Voici une ligne d'un relevé de compte : <code>ligne = "2026-10-12 08:15:03 DEPOT Awa 5000"</code>. Avec <code>split()</code>, récupère le nom et le montant, puis affiche exactement : <code>Dépôt de 5000 F par Awa</code>.`,
+    hint: `champs = ligne.split() ; nom = champs[3] ; montant = champs[4] ; puis une f-string.`,
+    start: `ligne = "2026-10-12 08:15:03 DEPOT Awa 5000"\n\n`,
+    sol: `ligne = "2026-10-12 08:15:03 DEPOT Awa 5000"\nchamps = ligne.split()\nnom = champs[3]\nmontant = champs[4]\nprint(f"Dépôt de {montant} F par {nom}")`,
+    check: (o, c) => { if (o.indexOf("Dépôt de 5000 F par Awa") < 0) return "La phrase attendue est : Dépôt de 5000 F par Awa (avec l'accent sur le ô)."; if (!/split/.test(c)) return "Utilise split() pour découper la ligne."; if (/print\([^)]*(5000|Awa)/.test(c)) return "Ne recopie pas le nom ou le montant à la main : prends-les dans la liste découpée."; return true; }
   }
 }
   ]

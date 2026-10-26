@@ -141,13 +141,13 @@ DEMO.gradient = host => {
 DEMO.threshold = host => {
   const id = "th-seuil-" + (host.dataset.key || "1");
   host.innerHTML = `<div class="demo">
-<div class="legend"><span>${legendSvg("circle", "var(--s1)")}Connexion normale (60)</span><span>${legendSvg("triangle", "var(--s2)")}Attaque (20)</span></div>
-<div class="cv-wrap"><canvas role="img" aria-label="80 connexions placées selon leur score, avec le seuil d'alerte"></canvas><div class="tip" hidden></div></div>
-<div class="ctrls"><label class="rng" for="${id}">Seuil d'alerte <input type="range" id="${id}" min="0.05" max="0.95" step="0.01" value="0.5"><span class="val"></span></label></div>
+<div class="legend"><span>${legendSvg("circle", "var(--s1)")}Pas de paludisme (60)</span><span>${legendSvg("triangle", "var(--s2)")}Paludisme (20)</span></div>
+<div class="cv-wrap"><canvas role="img" aria-label="80 personnes testées, placées selon le score du test, avec le seuil de décision"></canvas><div class="tip" hidden></div></div>
+<div class="ctrls"><label class="rng" for="${id}">Seuil du test <input type="range" id="${id}" min="0.05" max="0.95" step="0.01" value="0.5"><span class="val"></span></label></div>
 <div class="grid2" style="gap:1rem">
-<div class="cm-grid" aria-live="polite"><div class="h"></div><div class="h">Alerte</div><div class="h">Pas d'alerte</div>
-<div class="h">Attaque</div><div>VP <b data-o="vp"></b></div><div>FN <b data-o="fn"></b></div>
-<div class="h">Normal</div><div>FP <b data-o="fp"></b></div><div>VN <b data-o="vn"></b></div></div>
+<div class="cm-grid" aria-live="polite"><div class="h"></div><div class="h">Test positif</div><div class="h">Test négatif</div>
+<div class="h">Malade</div><div>VP <b data-o="vp"></b></div><div>FN <b data-o="fn"></b></div>
+<div class="h">Pas malade</div><div>FP <b data-o="fp"></b></div><div>VN <b data-o="vn"></b></div></div>
 <div class="readout"><div><span>précision</span><b data-o="p"></b></div><div><span>rappel</span><b data-o="r"></b></div><div><span>F1</span><b data-o="f"></b></div><div><span>accuracy</span><b data-o="a"></b></div></div>
 </div></div>`;
   const r = rng(5), pts = [];
@@ -172,7 +172,7 @@ DEMO.threshold = host => {
     x.strokeStyle = cssv("--axis"); x.lineWidth = 1; x.beginPath(); x.moveTo(P.l, h - P.b + .5); x.lineTo(w - P.r, h - P.b + .5); x.stroke();
     x.strokeStyle = cssv("--grid"); x.beginPath(); x.moveTo(P.l, (P.row(true) + P.row(false)) / 2 + .5); x.lineTo(w - P.r, (P.row(true) + P.row(false)) / 2 + .5); x.stroke();
     x.fillStyle = cssv("--ink-2"); x.font = "12px " + FONT_UI; x.textAlign = "right"; x.textBaseline = "middle";
-    x.fillText("Attaque", P.l - 10, P.row(true)); x.fillText("Normal", P.l - 10, P.row(false));
+    x.fillText("Malade", P.l - 10, P.row(true)); x.fillText("Sain", P.l - 10, P.row(false));
     const surf = cssv("--surface"), s1 = cssv("--s1"), s2 = cssv("--s2");
     pts.forEach(p => { if (!p.atk) mark(x, "circle", p.px, p.py, 4.5, s1, surf); });
     pts.forEach(p => { if (p.atk) mark(x, "triangle", p.px, p.py, 5, s2, surf); });
@@ -180,7 +180,7 @@ DEMO.threshold = host => {
     const tx = P.sx(th);
     x.strokeStyle = cssv("--accent"); x.lineWidth = 2; x.beginPath(); x.moveTo(tx, P.t - 14); x.lineTo(tx, h - P.b); x.stroke();
     x.fillStyle = cssv("--accent"); x.font = "600 11px " + FONT_UI; x.textBaseline = "top";
-    const lab = "seuil " + nfx(th, 2) + " · alerte →";
+    const lab = "seuil " + nfx(th, 2) + " · positif →";
     x.textAlign = tx > w - 150 ? "right" : "left"; x.fillText(lab, tx > w - 150 ? tx - 6 : tx + 6, P.t - 12);
   }
   function out() {
@@ -198,7 +198,7 @@ DEMO.threshold = host => {
     let best = null, bd = 14 * 14;
     pts.forEach(p => { const d = (p.px - mx) ** 2 + (p.py - my) ** 2; if (d < bd) { bd = d; best = p; } });
     if (best !== hov) { hov = best; draw(); }
-    if (best) tipAt(tip, best.px, best.py - 6, `${best.atk ? "Attaque" : "Connexion normale"} · score ${nfx(best.s, 2)} · ${best.s >= th ? "alerte" : "pas d'alerte"}`);
+    if (best) tipAt(tip, best.px, best.py - 6, `${best.atk ? "Paludisme" : "Pas de paludisme"} · score ${nfx(best.s, 2)} · ${best.s >= th ? "test positif" : "test négatif"}`);
     else tip.hidden = true;
   });
   cv.addEventListener("pointerleave", () => { hov = null; tip.hidden = true; draw(); });

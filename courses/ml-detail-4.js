@@ -4,7 +4,7 @@ Object.assign(window.ML_DETAIL, {
 
 /* ================================================================ */
 m7: {
-  intro: `<p>Jusqu'ici, on avait toujours la bonne réponse pour chaque exemple. Ici, plus de labels : l'algorithme doit trouver tout seul des groupes ou des comportements inhabituels. C'est très utile en cybersécurité, où l'on ne connaît pas à l'avance toutes les attaques.</p>`,
+  intro: `<p>Jusqu'ici, on avait toujours la bonne réponse pour chaque exemple. Ici, plus de labels : l'algorithme doit trouver tout seul des groupes ou des comportements inhabituels. C'est très utile quand on ne sait pas à l'avance ce qu'on cherche : des profils de clients, des consommations anormales…</p>`,
   prereq: `<p>La distance entre deux points et la moyenne (Maths 1 et 2), la mise à l'échelle (module 2).</p>`,
   blocks: {
     "L'algorithme k-means": {
@@ -57,7 +57,7 @@ m7: {
 <li>Aujourd'hui : 280 Mo. z = (280 − 200) / 50 = 1,6 → normal.</li>
 <li>Demain : 5 000 Mo. z = (5000 − 200) / 50 = 96 → très anormal : alerte (exfiltration de données ?).</li>
 <li>Les méthodes vues dans le cours (isolation forest, densité) généralisent cette idée à plusieurs features en même temps.</li></ol>`,
-      pitfall: `<p>Considérer toute anomalie comme une attaque. Une anomalie est seulement inhabituelle : un employé en déplacement, une sauvegarde exceptionnelle… Un analyste doit toujours enquêter.</p>`
+      pitfall: `<p>Considérer toute anomalie comme un problème. Une anomalie est seulement inhabituelle : une fête de famille, un nouvel appareil… Un humain doit toujours vérifier.</p>`
     }
   }
 },
@@ -188,10 +188,10 @@ m9: {
   blocks: {
     "Le déroulé d'un projet": {
       plain: `<p>Un projet de ML ressemble à une recette de cuisine : l'ordre des étapes compte autant que les ingrédients. Si tu prétraites avant de séparer train et test, tu crées une fuite ; si tu évalues sur le test pour choisir un réglage, ton score final ment. Suis toujours le même ordre.</p>`,
-      stepsTitle: "Pas à pas : un projet de détection de phishing",
+      stepsTitle: "Pas à pas : un projet d'aide au diagnostic",
       steps: `<ol>
-<li><strong>Problème</strong> : classer des emails phishing / légitime. Métrique : le rappel (ne pas rater de phishing), avec une précision acceptable.</li>
-<li><strong>Données</strong> : 5 000 emails étiquetés, 15 features (liens, domaine, mots d'urgence…).</li>
+<li><strong>Problème</strong> : classer des tumeurs en bénignes ou malignes, comme dans le code ci-dessous. Métrique : le rappel (ne pas rater de tumeur maligne), avec une précision acceptable.</li>
+<li><strong>Données</strong> : des centaines d'examens étiquetés par des médecins, une trentaine de mesures par examen (taille, forme, texture…).</li>
 <li><strong>Séparation</strong> : 80 % train, 20 % test, mis de côté.</li>
 <li><strong>Prétraitement</strong> sur le train : standardisation, encodage des catégories.</li>
 <li><strong>Baseline</strong> : régression logistique simple. Rappel en validation croisée : 0,82.</li>

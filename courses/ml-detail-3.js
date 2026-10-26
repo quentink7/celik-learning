@@ -4,7 +4,7 @@ Object.assign(window.ML_DETAIL, {
 
 /* ================================================================ */
 m4: {
-  intro: `<p>Classer, c'est ranger chaque exemple dans une boîte : spam ou normal, attaque ou trafic légitime, chat ou chien. Ce module présente trois façons très différentes de le faire : un calcul de score transformé en probabilité (régression logistique), un vote des voisins (k-NN) et une suite de questions oui / non (arbres et forêts).</p>`,
+  intro: `<p>Classer, c'est ranger chaque exemple dans une boîte : spam ou normal, malade ou en bonne santé, chat ou chien. Ce module présente trois façons très différentes de le faire : un calcul de score transformé en probabilité (régression logistique), un vote des voisins (k-NN) et une suite de questions oui / non (arbres et forêts).</p>`,
   prereq: `<p>La sigmoïde (Maths 5), la distance entre deux points (Maths 2), le modèle linéaire (module 3).</p>`,
   blocks: {
     "Du score à la probabilité : la sigmoïde": {
@@ -22,11 +22,11 @@ m4: {
       plain: `<p>Une probabilité ne suffit pas : à un moment, il faut décider « alerte » ou « pas d'alerte ». Le seuil est la barre à partir de laquelle on dit oui. Le placer, c'est un choix <strong>métier</strong>, pas mathématique : qu'est-ce qui coûte le plus cher, une fausse alerte ou un cas raté ?</p>`,
       stepsTitle: "Pas à pas : le même modèle, trois seuils",
       steps: `<ol>
-<li>Cinq connexions ont des probabilités d'attaque : 0,95 ; 0,70 ; 0,45 ; 0,20 ; 0,05.</li>
+<li>Cinq patients ont des probabilités d'avoir le paludisme : 0,95 ; 0,70 ; 0,45 ; 0,20 ; 0,05.</li>
 <li>Seuil 0,5 : alertes sur 0,95 et 0,70 → 2 alertes.</li>
-<li>Seuil 0,3 : alertes sur 0,95, 0,70 et 0,45 → 3 alertes. On rate moins d'attaques, mais plus de fausses alertes possibles.</li>
-<li>Seuil 0,9 : une seule alerte (0,95). Très peu de fausses alertes, mais on risque de rater des attaques.</li>
-<li>Dans un SOC, rater une intrusion coûte souvent plus cher qu'une fausse alerte : on baisse le seuil… sans noyer les analystes.</li></ol>`,
+<li>Seuil 0,3 : alertes sur 0,95, 0,70 et 0,45 → 3 alertes. On rate moins de malades, mais plus de fausses alertes possibles.</li>
+<li>Seuil 0,9 : une seule alerte (0,95). Très peu de fausses alertes, mais on risque de rater des malades.</li>
+<li>Au dispensaire, rater un malade coûte plus cher qu'un test de confirmation en trop : on baisse le seuil… sans surcharger le personnel.</li></ol>`,
       pitfall: `<p>Garder 0,5 par défaut sans réfléchir. 0,5 n'a rien de spécial ; le bon seuil dépend du coût de chaque type d'erreur (tu le verras en détail au module 5).</p>`
     },
     "La frontière de décision": {
@@ -51,13 +51,13 @@ m4: {
       pitfall: `<p>Utiliser k-NN sans mettre les features à la même échelle : la distance est alors dominée par la feature aux plus grands nombres. Et choisir k pair pour deux classes risque des égalités.</p>`
     },
     "Arbres de décision et forêts": {
-      plain: `<p>Un arbre de décision, c'est le jeu « Qui est-ce ? » : on pose des questions oui / non jusqu'à deviner. « Le lien est-il raccourci ? Oui. L'expéditeur est-il inconnu ? Oui. → phishing. » Une forêt aléatoire, c'est demander l'avis à cent personnes qui ont joué chacune avec des indices un peu différents, puis faire voter : l'avis collectif est plus fiable que celui d'un seul.</p>`,
-      stepsTitle: "Pas à pas : un petit arbre pour un email",
+      plain: `<p>Un arbre de décision, c'est le jeu « Qui est-ce ? » : on pose des questions oui / non jusqu'à deviner. « Le SMS contient-il un lien ? Oui. L'expéditeur est-il inconnu ? Oui. → spam. » Une forêt aléatoire, c'est demander l'avis à cent personnes qui ont joué chacune avec des indices un peu différents, puis faire voter : l'avis collectif est plus fiable que celui d'un seul.</p>`,
+      stepsTitle: "Pas à pas : un petit arbre pour un SMS",
       steps: `<ol>
-<li>Question 1 : contient-il un lien raccourci (bit.ly…) ? <strong>Oui</strong> → question 2.</li>
+<li>Question 1 : contient-il un lien ? <strong>Oui</strong> → question 2.</li>
 <li>Question 2 : l'expéditeur est-il dans les contacts ? <strong>Non</strong> → question 3.</li>
-<li>Question 3 : y a-t-il un mot d'urgence (« immédiatement », « suspendu ») ? <strong>Oui</strong>.</li>
-<li>Feuille atteinte : <strong>phishing</strong>.</li>
+<li>Question 3 : y a-t-il un mot comme « gagnez » ou « gratuit » ? <strong>Oui</strong>.</li>
+<li>Feuille atteinte : <strong>spam</strong>.</li>
 <li>L'algorithme choisit lui-même les questions et leur ordre : à chaque nœud, celle qui sépare le mieux les classes dans les données d'entraînement.</li></ol>`,
       pitfall: `<p>Laisser un arbre grandir sans limite : il finit par poser des questions ultra-précises qui ne concernent qu'un seul exemple, et apprend le bruit par cœur. On limite sa profondeur, ou on passe à une forêt.</p>`
     }
@@ -66,7 +66,7 @@ m4: {
 
 /* ================================================================ */
 a6: {
-  intro: `<p>Les modèles ne disent presque jamais « oui » ou « non » : ils disent « probablement oui, à 80 % ». Pour lire correctement ces résultats, et pour comprendre pourquoi un détecteur d'attaques peut produire beaucoup de fausses alertes, il faut quelques bases de probabilités. Ici, tout se fait en <strong>comptant</strong> dans des tableaux.</p>`,
+  intro: `<p>Les modèles ne disent presque jamais « oui » ou « non » : ils disent « probablement oui, à 80 % ». Pour lire correctement ces résultats, et pour comprendre pourquoi un bon test médical peut produire beaucoup de fausses alertes, il faut quelques bases de probabilités. Ici, tout se fait en <strong>comptant</strong> dans des tableaux.</p>`,
   blocks: {
     "Une probabilité, c'est une proportion": {
       plain: `<p>Une probabilité, c'est la réponse à « sur 100 fois, combien de fois ? ». P = 0,3 veut dire « 30 fois sur 100 ». On peut toujours la voir comme une fraction : le nombre de cas qui nous intéressent, divisé par le nombre total de cas.</p>`,
@@ -90,25 +90,25 @@ a6: {
     },
     "La probabilité conditionnelle": {
       plain: `<p>« Sachant que » veut dire : on ne regarde plus tout le monde, seulement un sous-groupe. P(pluie | nuages) : parmi les jours nuageux, quelle part a eu de la pluie ? On change de dénominateur : on divise par la taille du sous-groupe, pas par le total.</p>`,
-      stepsTitle: "Pas à pas : lire le tableau des 1 000 connexions",
+      stepsTitle: "Pas à pas : lire le tableau des 1 000 personnes testées",
       steps: `<ol>
-<li>Pour P(alerte | attaque), on se place dans la <strong>ligne</strong> « attaque » : 20 connexions.</li>
-<li>Parmi elles, 18 ont déclenché une alerte → 18 / 20 = 0,90.</li>
-<li>Pour P(attaque | alerte), on se place dans la <strong>colonne</strong> « alerte » : 67 connexions.</li>
-<li>Parmi elles, 18 sont de vraies attaques → 18 / 67 ≈ 0,27.</li>
+<li>Pour P(positif | malade), on se place dans la <strong>ligne</strong> « malade » : 20 personnes.</li>
+<li>Parmi elles, 18 ont un test positif → 18 / 20 = 0,90.</li>
+<li>Pour P(malade | positif), on se place dans la <strong>colonne</strong> « test positif » : 67 personnes.</li>
+<li>Parmi elles, 18 sont vraiment malades → 18 / 67 ≈ 0,27.</li>
 <li>Même nombre 18 au numérateur, mais deux groupes de référence différents : deux réponses très différentes.</li></ol>`,
-      pitfall: `<p>Confondre P(A | B) et P(B | A). « 90 % des attaques déclenchent une alerte » ne veut pas dire « 90 % des alertes sont des attaques ». Ici, seulement 27 % le sont.</p>`
+      pitfall: `<p>Confondre P(A | B) et P(B | A). « 90 % des malades ont un test positif » ne veut pas dire « 90 % des tests positifs sont des malades ». Ici, seulement 27 % le sont.</p>`
     },
     "La formule de Bayes": {
-      plain: `<p>Bayes sert à <strong>retourner</strong> une probabilité. On connaît souvent la qualité d'un test (« il détecte 90 % des attaques »), mais on veut savoir autre chose : « mon outil a sonné, quelle est la probabilité que ce soit une vraie attaque ? ». Bayes fait le pont, en tenant compte de la rareté des attaques.</p>`,
-      stepsTitle: "Pas à pas : un détecteur sur 10 000 connexions",
+      plain: `<p>Bayes sert à <strong>retourner</strong> une probabilité. On connaît souvent la qualité d'un test (« il repère 95 % des malades »), mais on veut savoir autre chose : « mon test est positif, quelle est la probabilité que je sois vraiment malade ? ». Bayes fait le pont, en tenant compte de la rareté de la maladie.</p>`,
+      stepsTitle: "Pas à pas : un test sur 10 000 personnes",
       steps: `<ol>
-<li>1 % sont des attaques : 100 attaques et 9 900 connexions normales.</li>
-<li>Le détecteur repère 95 % des attaques : 95 alertes justes.</li>
-<li>Il se trompe sur 5 % du trafic normal : 0,05 × 9 900 = 495 fausses alertes.</li>
-<li>Alertes au total : 95 + 495 = 590.</li>
-<li>P(attaque | alerte) = 95 / 590 ≈ <strong>0,16</strong>. Seulement 16 % des alertes sont de vraies attaques, alors que le détecteur paraît excellent !</li></ol>`,
-      pitfall: `<p>Oublier la fréquence de départ (la probabilité « a priori »). Quand l'événement est rare, même un très bon détecteur produit beaucoup plus de fausses alertes que de vraies. C'est le quotidien des SOC.</p>`
+<li>1 % sont malades : 100 malades et 9 900 personnes saines.</li>
+<li>Le test repère 95 % des malades : 95 tests positifs justes.</li>
+<li>Il se trompe sur 5 % des personnes saines : 0,05 × 9 900 = 495 faux positifs.</li>
+<li>Tests positifs au total : 95 + 495 = 590.</li>
+<li>P(malade | positif) = 95 / 590 ≈ <strong>0,16</strong>. Seulement 16 % des tests positifs correspondent à de vrais malades, alors que le test paraît excellent !</li></ol>`,
+      pitfall: `<p>Oublier la fréquence de départ (la probabilité « a priori »). Quand la maladie est rare, même un très bon test produit beaucoup plus de faux positifs que de vrais. C'est pour ça qu'un médecin fait souvent un second examen pour confirmer.</p>`
     },
     "Espérance et loi normale": {
       plain: `<p>L'espérance, c'est « ce qu'on obtient en moyenne si on répète l'expérience un très grand nombre de fois ». La loi normale, c'est la forme en cloche qu'on retrouve partout (tailles, erreurs de mesure, notes) : la plupart des valeurs sont près de la moyenne, et plus on s'en éloigne, plus elles sont rares.</p>`,
@@ -126,37 +126,37 @@ a6: {
 
 /* ================================================================ */
 m5: {
-  intro: `<p>Un modèle qui annonce « 99 % de réussite » peut être totalement inutile. Ce module t'apprend à <strong>évaluer honnêtement</strong> un modèle de classification, avec les mêmes outils que les équipes de cybersécurité utilisent pour juger un détecteur d'intrusion. Tout repose sur un tableau de quatre cases.</p>`,
+  intro: `<p>Un modèle qui annonce « 99 % de réussite » peut être totalement inutile. Ce module t'apprend à <strong>évaluer honnêtement</strong> un modèle de classification, avec les mêmes outils que les médecins utilisent pour juger un test de dépistage. Tout repose sur un tableau de quatre cases.</p>`,
   prereq: `<p>La probabilité conditionnelle (Maths 6), le seuil de décision (module 4).</p>`,
   blocks: {
     "La matrice de confusion": {
       plain: `<p>La matrice de confusion, c'est le bilan des erreurs, rangé dans quatre cases. Pour chaque exemple, on se pose deux questions : qu'est-ce que c'était vraiment ? qu'est-ce que le modèle a dit ? Deux réponses possibles chacune, donc quatre combinaisons : deux bonnes réponses (VP, VN) et deux sortes d'erreurs (FP, FN).</p>`,
-      stepsTitle: "Pas à pas : remplir la matrice avec 10 connexions",
+      stepsTitle: "Pas à pas : remplir la matrice avec 10 personnes testées",
       steps: `<ol>
-<li>Réalité : 3 attaques, 7 normales. Le modèle déclenche 4 alertes, dont 2 sur de vraies attaques.</li>
-<li><strong>VP</strong> (attaque, alerte) = 2.</li>
-<li><strong>FN</strong> (attaque, pas d'alerte) = 3 − 2 = 1 : une attaque ratée.</li>
-<li><strong>FP</strong> (normal, alerte) = 4 − 2 = 2 : deux fausses alertes.</li>
-<li><strong>VN</strong> (normal, pas d'alerte) = 7 − 2 = 5.</li>
+<li>Réalité : 3 malades, 7 personnes saines. Le modèle déclare 4 personnes positives, dont 2 vraiment malades.</li>
+<li><strong>VP</strong> (malade, positif) = 2.</li>
+<li><strong>FN</strong> (malade, négatif) = 3 − 2 = 1 : un malade raté.</li>
+<li><strong>FP</strong> (sain, positif) = 4 − 2 = 2 : deux fausses alertes.</li>
+<li><strong>VN</strong> (sain, négatif) = 7 − 2 = 5.</li>
 <li>Vérification : 2 + 1 + 2 + 5 = 10. ✓</li></ol>`,
-      pitfall: `<p>Se fier à l'exactitude (accuracy) seule. Avec 1 attaque pour 999 connexions normales, un modèle qui ne déclenche <em>jamais</em> d'alerte a 99,9 % d'exactitude… et ne sert à rien.</p>`
+      pitfall: `<p>Se fier à l'exactitude (accuracy) seule. Avec 1 malade pour 999 personnes saines, un modèle qui ne déclare <em>jamais</em> personne malade a 99,9 % d'exactitude… et ne sert à rien.</p>`
     },
     "Précision et rappel": {
-      plain: `<p>Deux questions différentes. <strong>Précision</strong> : « quand mon modèle sonne, a-t-il raison ? » (la qualité de ses alertes). <strong>Rappel</strong> : « parmi toutes les attaques réelles, combien en a-t-il trouvées ? » (sa capacité à ne rien rater). Un chien de garde qui aboie à chaque passant a un bon rappel mais une mauvaise précision ; un chien qui n'aboie qu'une fois par an a l'inverse.</p>`,
+      plain: `<p>Deux questions différentes. <strong>Précision</strong> : « quand mon modèle dit « malade », a-t-il raison ? » (la qualité de ses alertes). <strong>Rappel</strong> : « parmi tous les vrais malades, combien en a-t-il trouvés ? » (sa capacité à ne rien rater). Un chien de garde qui aboie à chaque passant a un bon rappel mais une mauvaise précision ; un chien qui n'aboie qu'une fois par an a l'inverse.</p>`,
       stepsTitle: "Pas à pas : avec VP = 2, FP = 2, FN = 1",
       steps: `<ol>
 <li>Précision = VP / (VP + FP) = 2 / (2 + 2) = <strong>0,50</strong> : une alerte sur deux est fondée.</li>
-<li>Rappel = VP / (VP + FN) = 2 / (2 + 1) ≈ <strong>0,67</strong> : deux attaques sur trois ont été détectées.</li>
+<li>Rappel = VP / (VP + FN) = 2 / (2 + 1) ≈ <strong>0,67</strong> : deux malades sur trois ont été repérés.</li>
 <li>Ces deux chiffres racontent deux histoires différentes : il faut toujours regarder les deux.</li></ol>`,
       pitfall: `<p>Inverser les dénominateurs. Précision : on divise par tout ce que le modèle a <strong>prédit</strong> positif (VP + FP). Rappel : par tout ce qui était <strong>réellement</strong> positif (VP + FN).</p>`
     },
     "Le compromis, en direct": {
-      plain: `<p>Précision et rappel tirent dans des sens opposés, et c'est le seuil qui fait pencher la balance. Baisser le seuil, c'est être plus méfiant : on attrape plus d'attaques (rappel ↑) mais on accuse aussi plus d'innocents (précision ↓). Monter le seuil fait l'inverse.</p>`,
+      plain: `<p>Précision et rappel tirent dans des sens opposés, et c'est le seuil qui fait pencher la balance. Baisser le seuil, c'est être plus prudent : on repère plus de malades (rappel ↑) mais on inquiète aussi plus de personnes en bonne santé (précision ↓). Monter le seuil fait l'inverse.</p>`,
       stepsTitle: "Pas à pas : ce que tu devrais observer en bougeant le seuil",
       steps: `<ol>
-<li>Seuil tout à gauche : tout déclenche une alerte. Rappel = 1 (aucune attaque ratée), précision très basse.</li>
-<li>Seuil tout à droite : presque rien ne déclenche. Précision souvent élevée, rappel très bas.</li>
-<li>Entre les deux : tu cherches le point qui correspond au besoin (ne rien rater, ou ne pas noyer l'équipe).</li></ol>`,
+<li>Seuil tout à gauche : tout le monde est déclaré positif. Rappel = 1 (aucun malade raté), précision très basse.</li>
+<li>Seuil tout à droite : presque personne n'est déclaré positif. Précision souvent élevée, rappel très bas.</li>
+<li>Entre les deux : tu cherches le point qui correspond au besoin (ne rater aucun malade, ou ne pas surcharger le dispensaire).</li></ol>`,
       pitfall: `<p>Chercher un seuil qui donne précision = rappel = 1. Sauf problème très facile, ce seuil n'existe pas : il y a toujours un compromis à choisir.</p>`
     },
     "Le score F1": {

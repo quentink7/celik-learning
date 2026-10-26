@@ -34,6 +34,8 @@
   const mlLabel = m => (m.track === "maths" ? "Maths " : "Module ") + m.num;
   const COURSES = { python: { meta: PY, units: PY_LESSONS }, ml: { meta: ML, units: ML_MODS }, sql: { meta: SQ, units: SQ_LESSONS } };
   const COURSE_KEYS = ["python", "ml", "sql"];
+  const SRC = window.COURSE_SOURCES || {};
+  const refOf = (course, id) => ((SRC[course] || {}).refs || {})[id];
   const isLessonCourse = c => c === "python" || c === "sql";   // cours en leçons (avec exercice), par opposition aux modules du ML
 
   /* ------------------------------------------------------------------ */
@@ -295,7 +297,7 @@
   </figure>
 </section>
 <section class="courses" aria-label="Les trois parcours">
-  ${card("python", "&gt;&gt;&gt; print(\"Bonjour\")", ["Variables, conditions, boucles, listes, fonctions", "Une console Python dans la page, rien à installer", "Exercices corrigés automatiquement", "Projet final : repérer une attaque dans des logs"], `${PY_LESSONS.length} leçons · environ ${hours(PY_LESSONS)} h`)}
+  ${card("python", "&gt;&gt;&gt; print(\"Bonjour\")", ["Variables, conditions, boucles, listes, fonctions", "Une console Python dans la page, rien à installer", "Exercices corrigés automatiquement", "Projet final : calculer le bulletin d'une classe"], `${PY_LESSONS.length} leçons · environ ${hours(PY_LESSONS)} h`)}
   ${card("ml", "ŷ = w · x + b", ["Les idées du ML, sans jargon", "Les maths reprises depuis le début, juste à temps", "Démos à manipuler : gradient, seuil, k-means", "Un projet complet avec scikit-learn"], `${ML_MODS.length} modules dont ${ML_MODS.filter(m => m.track === "maths").length} de maths · environ ${hours(ML_MODS)} h`)}
   ${card("sql", "SELECT * FROM clients;", ["Interroger une base : filtrer, trier, compter", "Relier les tables : JOIN, GROUP BY", "Concevoir sa base, modifier, sécuriser", "Programme aligné sur CS50 SQL (Harvard)"], `${SQ_LESSONS.length} leçons · environ ${hours(SQ_LESSONS)} h`)}
 </section>
@@ -436,7 +438,7 @@
       ${progBar(p)}
       <div class="row"><a class="btn primary" href="#/${course}/${nxt.id}">${p.done === 0 && !st.last ? "Commencer le cours" : p.done === p.total ? "Revoir depuis le début" : "Continuer : " + esc(nxt.title)}</a></div>
     </section>
-    ${c.meta.source ? sourceBox(c.meta.source) : ""}
+    ${c.meta.source ? sourceBox(c.meta.source) : SRC[course] ? `<aside class="box source ${course}"><b class="tag">D'où vient ce programme</b>${SRC[course].html}</aside>` : ""}
     ${body}
   </div>
 </div>`;
@@ -521,7 +523,7 @@
   <span class="big-n" aria-hidden="true">${String(idx + 1).padStart(2, "0")}</span>
   <span class="eyebrow">Partie ${l.part + 1} · ${esc(PY.parts[l.part].title)} · leçon ${idx + 1} sur ${PY_LESSONS.length}</span>
   <h1>${esc(l.title)}</h1>
-  <div class="meta"><span>≈ ${l.minutes} min</span><button type="button" class="btn ghost small" data-goto-bench>↓ Aller à l'exercice</button><span id="done-tag">${isDone("python", l.id) ? "✓ Exercice réussi" : ""}</span></div>
+  <div class="meta"><span>≈ ${l.minutes} min</span>${refOf("python", l.id) ? `<span>Repère ${esc(SRC.python.label)} : ${esc(refOf("python", l.id))}</span>` : ""}<button type="button" class="btn ghost small" data-goto-bench>↓ Aller à l'exercice</button><span id="done-tag">${isDone("python", l.id) ? "✓ Exercice réussi" : ""}</span></div>
 </header>
 <p class="objective"><b>Objectif</b>${esc(l.goal)}</p>
 <div class="py-layout">
@@ -858,7 +860,7 @@
   <span class="big-n" aria-hidden="true">${String(idx + 1).padStart(2, "0")}</span>
   <span class="eyebrow">${mlLabel(m)} · étape ${idx + 1} sur ${ML_MODS.length}${m.track === "maths" ? " · prépare le module suivant" : ""}</span>
   <h1>${esc(m.title)}</h1>
-  <div class="meta"><span>≈ ${m.minutes || 30} min</span><span>${esc(m.kind || "")}</span>${done ? `<span>✓ Terminé${sc != null ? ` · quiz ${sc} %` : ""}</span>` : ""}</div>
+  <div class="meta"><span>≈ ${m.minutes || 30} min</span><span>${esc(m.kind || "")}</span>${refOf("ml", m.id) ? `<span>Repère : ${esc(refOf("ml", m.id))}</span>` : ""}${done ? `<span>✓ Terminé${sc != null ? ` · quiz ${sc} %` : ""}</span>` : ""}</div>
 </header>
 <p class="objective"><b>Objectif</b>${esc(m.objective)}</p>
 ${d.intro ? `<div class="box plain"><b class="tag">De quoi parle ce module, en clair</b>${d.intro}</div>` : ""}

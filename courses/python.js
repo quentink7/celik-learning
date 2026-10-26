@@ -11,7 +11,7 @@ window.COURSE_PYTHON = (function () {
   return {
     id: "python",
     title: "Python",
-    tagline: "Programmer de zéro, jusqu'à analyser de vrais logs",
+    tagline: "Programmer de zéro, jusqu'à calculer un vrai bulletin de notes",
     intro: "Aucune connaissance requise. Chaque leçon explique une notion avec des exemples suivis ligne par ligne, puis tu la pratiques directement dans la console intégrée : ton code s'exécute dans le navigateur, rien à installer.",
     parts
   };
