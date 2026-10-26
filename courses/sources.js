@@ -1,4 +1,4 @@
-/* Sources des cours Python et Machine Learning : le cours reconnu dont chaque programme suit la progression,
+/* Sources des cours Python, C et Machine Learning : le cours reconnu dont chaque programme suit la progression,
    et, pour chaque leçon ou module, la partie correspondante de ce cours. (La source du cours SQL est dans sql.js.) */
 window.COURSE_SOURCES = {
   python: {
@@ -14,6 +14,12 @@ window.COURSE_SOURCES = {
       p10: "« Lists »", p11: "« Lists »", p12: "« Dictionaries »", p13: "« Strings »",
       p14: "« Functions »", p15: "« Conditional Execution » (try / except)", p16: "« Lists » et « Dictionaries »"
     }
+  },
+  c: {
+    html: `<p>Ce cours suit la partie en langage C de <a href="https://cs50.harvard.edu/x/" target="_blank" rel="noopener noreferrer">CS50x, CS50's Introduction to Computer Science</a>, le cours d'introduction à l'informatique de l'université Harvard (David J. Malan), publié sous licence <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC-SA 4.0</a>. Ses semaines 1 à 5 (C, Arrays, Algorithms, Memory, Data Structures) sont reprises dans le même ordre, réparties en 16 leçons. CS50 utilise sa propre bibliothèque (cs50.h) pour lire au clavier ; ici, on utilise directement scanf, du C standard.</p>
+<p>Le code est compilé dans ta page par <a href="https://github.com/tyfkda/xcc" target="_blank" rel="noopener noreferrer">xcc</a>, un compilateur C libre (licence MIT) qui fonctionne dans le navigateur.</p>
+<p>Les explications, les exemples et les exercices sont rédigés pour CELIK Learning, en français. CELIK Learning n'est affilié ni à Harvard, ni à CS50.</p>`,
+    label: "CS50x"
   },
   ml: {
     html: `<p>Ce cours suit les grands thèmes de <a href="https://ocw.mit.edu/courses/6-036-introduction-to-machine-learning-fall-2020/" target="_blank" rel="noopener noreferrer">6.036 Introduction to Machine Learning</a> du MIT (Leslie Kaelbling, Tomás Lozano-Pérez, Isaac Chuang et Duane Boning), gratuit sur MIT OpenCourseWare et publié sous licence <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-NC-SA 4.0</a>. L'ordre des modules suit celui de la <a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer">Machine Learning Specialization</a> d'Andrew Ng (Stanford Online et DeepLearning.AI), le cours de machine learning le plus suivi au monde.</p>

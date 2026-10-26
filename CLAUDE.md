@@ -8,7 +8,7 @@ CELIK Learning est une plateforme web gratuite, en français, qui apprend à de 
 
 Ce qui ne doit pas changer :
 
-- **Trois cours au choix** dès l'accueil : Python (16 leçons), Machine Learning (16 modules, dont 7 de maths) et SQL (16 leçons, ajouté le 19 octobre 2026 à la demande de Quentin).
+- **Quatre cours au choix** dès l'accueil : Python (16 leçons), Machine Learning (16 modules, dont 7 de maths), SQL (16 leçons, ajouté le 19 octobre 2026) et langage C (16 leçons, ajouté le 26 octobre 2026), tous deux à la demande de Quentin.
 - **Connexion par email avant d'accéder aux cours** : mot de passe, lien magique par email, mot de passe oublié.
 - **Progression enregistrée dans Supabase** : leçons terminées, scores des quiz, code en cours de chaque exercice. L'élève reprend où il s'est arrêté, sur n'importe quel appareil.
 - **Pas d'assistant IA dans les cours** : l'option a été retirée volontairement. Les cours doivent être assez détaillés pour s'en passer.
@@ -25,6 +25,7 @@ Ce qui ne doit pas changer :
 | Connexion et sauvegarde | Code prêt, testé en mode démo et avec un faux projet | Pas encore testé avec un vrai projet Supabase |
 | Mise en ligne | En ligne sur Vercel (celik-learning.vercel.app), code sur GitHub (privé) | — |
 | Cours SQL (16 leçons) | Ajouté le 19/10/2026 : programme de CS50 SQL (Harvard), SQLite dans la page, base « boutique Nong-Taaba » | Les 16 solutions passent ; aucun code de départ ne passe ; 84 exemples exécutés |
+| Cours C (16 leçons) | Ajouté le 26/10/2026 : programme des semaines 1 à 5 de CS50x (Harvard), vrai compilateur xcc dans un Web Worker | Les 16 solutions passent ; aucun code de départ ne passe ; 52 exemples compilés et exécutés |
 
 Sans identifiants Supabase dans `assets/config.js`, le site passe en **mode démo** : pas de connexion, progression gardée dans le navigateur. Un bandeau jaune le signale.
 
@@ -37,11 +38,13 @@ Navigateur de l'élève (site statique)
   courses/python-1.js … -4.js, python.js   16 leçons + exercices
   courses/ml.js + ml-detail-1.js … -4.js   16 modules, 80 sections
   courses/sql-1.js … -4.js, sql.js, sql-data.js   16 leçons SQL + base d'exemple
+  courses/c-1.js … -4.js, c.js                    16 leçons de C
         │
         ▼
   assets/app.js            routeur, pages, quiz, atelier, étoffe de progression
         ├─► assets/python-runtime.js   Python (Skulpt, assets/lib/) dans la page
         ├─► assets/sql-runtime.js      SQLite (sql.js, assets/lib/) dans la page
+        ├─► assets/c-runtime.js        compilateur C xcc (assets/lib/xcc/) dans un Web Worker
         ├─► assets/demos.js            6 démos ML en canvas
         └─► assets/store.js            connexion + progression, cache localStorage
                   │  lit et enregistre
@@ -85,6 +88,8 @@ Chaque leçon : `id` (p01…p16), `title`, `minutes`, `goal`, `why`, `sections`,
 
 **SQL : 16 leçons en 4 parties** (`courses/sql-1.js` à `sql-4.js`, assemblées par `sql.js`, ids s01…s16) : interroger une base ; relier les tables ; concevoir et écrire ; aller plus loin (projet final + injection SQL). Le programme suit les 7 semaines de CS50's Introduction to Databases with SQL (Harvard, CC BY-NC-SA 4.0), crédité sur la page du cours ; les textes et exercices sont propres à CELIK Learning. Chaque leçon a les mêmes champs qu'une leçon Python, plus `cs50` et éventuellement `setup` ; voir le README pour la correction.
 
+**C : 16 leçons en 4 parties** (`courses/c-1.js` à `c-4.js`, assemblées par `c.js`, ids c01…c16) : premiers pas ; tableaux et chaînes ; algorithmes ; mémoire et structures de données (projet final : la file d'attente du guichet, en liste chaînée). Programme des semaines 1 à 5 de CS50x (Harvard, CC BY-NC-SA 4.0). Chaque leçon a les champs d'une leçon Python plus `cs50x` (la semaine) ; l'exercice a `inputs` (ce qui est tapé au clavier), `args` (arguments du programme) et `check(sortie, code, codeDeSortie)`. Les exemples `<pre class="cx">` (avec `data-stdin`, `data-args`) sont compilés et exécutés dans la page. Limites connues du compilateur : `%.0f` et les largeurs avec zéros (`%05.1f`) s'affichent mal, `long` fait 32 bits, déréférencer NULL ne plante pas.
+
 **Machine Learning : 16 étapes**, programme aligné sur MIT 6.036 (CC BY-NC-SA 4.0) dans l'ordre de la Machine Learning Specialization d'Andrew Ng ; repères dans `courses/sources.js`. Exemple fil rouge des modules 5 et Maths 6 : le dépistage du paludisme. Dans cet ordre : m1, a1, a2, m2, a3, a4, m3, a5, m4, a6, m5, m6, m7, a7, m8, m9 (aN = maths placées juste avant le module qui en a besoin).
 - `courses/ml.js` : contenu de base (objectif, question « devine », sections, démos, quiz, mots-clés, « explique avec tes mots »).
 - `courses/ml-detail-1.js` à `-4.js` : approfondissement de chacune des 80 sections, rangé par id de module puis par **titre exact** de section : `plain`, `steps`, `stepsTitle`, `pitfall`, plus `intro` et `prereq` par module.
@@ -125,12 +130,12 @@ Hors périmètre : assistant IA dans les cours, paiement. (Les nouveaux cours é
 
 ## Règles
 
-- Ne jamais changer l'`id` d'une leçon ou d'un module publié (p01…p16, s01…s16, m1…m9, a1…a7).
+- Ne jamais changer l'`id` d'une leçon ou d'un module publié (p01…p16, s01…s16, c01…c16, m1…m9, a1…a7).
 - Ne jamais mettre la clé `service_role` dans le site.
 - Garder le site statique : pas de framework ni de compilation sans l'accord de Quentin.
-- Pas de dépendance à un CDN : Skulpt, sql.js, le client Supabase et les polices sont dans `assets/`.
+- Pas de dépendance à un CDN : Skulpt, sql.js, xcc, le client Supabase et les polices sont dans `assets/`.
 - Français simple, tutoiement, phrases courtes, exemples du quotidien ouest-africain.
 - Pas de `confirm()` ni `alert()` : confirmations en deux clics dans la page.
 - Accessibilité : focus visible, contraste suffisant dans les deux thèmes, `prefers-reduced-motion` respecté.
 
-Avant chaque mise en ligne : 16 exercices Python et 16 exercices SQL (solution = réussi, départ = échec), 16 modules ML sans erreur, affichage à 390 px sans défilement horizontal, connexion complète avec un vrai compte.
+Avant chaque mise en ligne (`tools/check-site.cjs`, voir son en-tête) : 16 exercices Python, 16 SQL et 16 C (solution = réussi, départ = échec), 16 modules ML sans erreur, affichage à 390 px sans défilement horizontal, connexion complète avec un vrai compte.

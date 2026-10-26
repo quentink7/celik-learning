@@ -1,13 +1,14 @@
-# CELIK Learning — plateforme de cours Python, SQL et Machine Learning
+# CELIK Learning — plateforme de cours Python, SQL, C et Machine Learning
 
 Site statique (HTML, CSS, JavaScript, sans étape de compilation) avec :
 
-- une page d'accueil où l'élève choisit **Python**, **Machine Learning** ou **SQL** ;
+- une page d'accueil où l'élève choisit **Python**, **Machine Learning**, **SQL** ou **C** ;
 - la **connexion par email** (mot de passe, ou lien magique sans mot de passe) via Supabase ;
 - la **sauvegarde de la progression** dans le compte de l'élève (leçons terminées, scores de quiz, code en cours) ;
 - un **cours Python** de 16 leçons avec une console Python intégrée (le code s'exécute dans le navigateur) et des exercices corrigés automatiquement ;
 - un **cours Machine Learning** de 16 modules (9 de ML, 7 de maths placés juste avant le module qui en a besoin), avec explications « En clair », calculs « Pas à pas », pièges fréquents, démos interactives, quiz et mots-clés ;
-- un **cours SQL** de 16 leçons, dont le programme suit CS50 SQL (Harvard), avec SQLite intégré (les requêtes s'exécutent dans le navigateur), une base d'exemple (la boutique Nong-Taaba, à Ouagadougou) et des exercices corrigés automatiquement.
+- un **cours SQL** de 16 leçons, dont le programme suit CS50 SQL (Harvard), avec SQLite intégré (les requêtes s'exécutent dans le navigateur), une base d'exemple (la boutique Nong-Taaba, à Ouagadougou) et des exercices corrigés automatiquement ;
+- un **cours de langage C** de 16 leçons, dont le programme suit les semaines 1 à 5 de CS50x (Harvard), avec un vrai compilateur C (xcc) qui tourne dans le navigateur et des exercices corrigés automatiquement.
 
 Le nom et le slogan se changent dans `assets/config.js`. Le design (« l'étoffe ») est décrit dans `CLAUDE.md`.
 
@@ -85,19 +86,24 @@ assets/app.js              pages, navigation, quiz, console Python, modules ML
 assets/store.js            connexion et sauvegarde de la progression
 assets/python-runtime.js   interpréteur Python (Skulpt) et erreurs en français
 assets/sql-runtime.js      moteur SQL (SQLite via sql.js), erreurs en français, correction des exercices
+assets/c-runtime.js        compilateur C (xcc) dans un Web Worker, erreurs en français, arrêt des boucles infinies
 assets/demos.js            démos interactives du cours ML
 assets/celik.css           le style (design « l'étoffe »)
 assets/fonts/              polices hébergées avec le site
-assets/lib/                bibliothèques incluses (Skulpt, sql.js, Supabase) : aucun CDN
+assets/lib/                bibliothèques incluses (Skulpt, sql.js, xcc, Supabase) : aucun CDN
 courses/python-1.js … -4.js   les 16 leçons Python, en 4 parties
 courses/python.js          assemble le cours Python
 courses/ml.js              le contenu de base du cours ML (modules, quiz, mots-clés)
 courses/ml-detail-1.js … -4.js   l'approfondissement débutant de chaque section ML
 courses/sql-1.js … -4.js   les 16 leçons SQL, en 4 parties ; courses/sql.js les assemble
 courses/sql-data.js        la base d'exemple du cours SQL (générée par tools/gen-sql-data.py)
+courses/c-1.js … -4.js     les 16 leçons de C, en 4 parties ; courses/c.js les assemble
+courses/sources.js         les cours de référence (Python, C, ML) et le repère de chaque leçon
+tools/serve.py, tools/check-site.cjs   serveur local avec les en-têtes de sécurité, et contrôles d'avant mise en ligne
 supabase/schema.sql        la table de progression et ses règles de sécurité
 supabase/feedback.sql      la table des avis des élèves
 supabase/cours-sql.sql     à lancer une fois pour autoriser le cours SQL dans les deux tables
+supabase/cours-c.sql       à lancer une fois pour autoriser le cours C dans les deux tables
 ```
 
 ### Modifier ou ajouter une leçon Python

@@ -1,4 +1,4 @@
-/* Application : routage, pages, rendu des cours Python, SQL et Machine Learning */
+/* Application : routage, pages, rendu des cours Python, SQL, C et Machine Learning */
 (function () {
   "use strict";
   const CFG = window.SITE_CONFIG || {};
@@ -18,6 +18,9 @@
   const SQ_LESSONS = [];
   SQ.parts.forEach((p, pi) => p.lessons.forEach(l => { l.part = pi; SQ_LESSONS.push(l); }));
   const CS50_WEEKS = SQ.source.weeks;
+  const CC = window.COURSE_C;
+  const C_LESSONS = [];
+  CC.parts.forEach((p, pi) => p.lessons.forEach(l => { l.part = pi; C_LESSONS.push(l); }));
 
   const DETAIL = window.ML_DETAIL || {};
   const ML_MODS = (window.COURSE_ML_MODULES || []).map(m => {
@@ -32,11 +35,11 @@
     intro: "Pensé pour quelqu'un qui part de zéro en maths. Les modules de maths sont placés juste avant le module de ML qui en a besoin : tu n'apprends chaque outil qu'au moment où il sert. Chaque notion est expliquée simplement, puis calculée pas à pas, avec des démos à manipuler."
   };
   const mlLabel = m => (m.track === "maths" ? "Maths " : "Module ") + m.num;
-  const COURSES = { python: { meta: PY, units: PY_LESSONS }, ml: { meta: ML, units: ML_MODS }, sql: { meta: SQ, units: SQ_LESSONS } };
-  const COURSE_KEYS = ["python", "ml", "sql"];
+  const COURSES = { python: { meta: PY, units: PY_LESSONS }, ml: { meta: ML, units: ML_MODS }, sql: { meta: SQ, units: SQ_LESSONS }, c: { meta: CC, units: C_LESSONS } };
+  const COURSE_KEYS = ["python", "ml", "sql", "c"];
   const SRC = window.COURSE_SOURCES || {};
   const refOf = (course, id) => ((SRC[course] || {}).refs || {})[id];
-  const isLessonCourse = c => c === "python" || c === "sql";   // cours en leçons (avec exercice), par opposition aux modules du ML
+  const isLessonCourse = c => c === "python" || c === "sql" || c === "c";   // cours en leçons (avec exercice), par opposition aux modules du ML
 
   /* ------------------------------------------------------------------ */
   /* Utilitaires                                                          */
@@ -137,7 +140,7 @@
     if (!mine || mine["unit:" + course + ":" + u.id]) return;
     const py = isLessonCourse(course);
     setTimeout(() => openFeedback({
-      tag: course === "python" ? "Ton avis · leçon " + u.id.slice(1) : course === "sql" ? "Ton avis · SQL leçon " + u.id.slice(1) : "Ton avis · " + mlLabel(u),
+      tag: course === "python" ? "Ton avis · leçon " + u.id.slice(1) : course === "sql" ? "Ton avis · SQL leçon " + u.id.slice(1) : course === "c" ? "Ton avis · C leçon " + u.id.slice(1) : "Ton avis · " + mlLabel(u),
       title: py ? "Cette leçon t'a aidé ?" : "Ce module t'a aidé ?", sub: u.title,
       question: py ? "Elle t'a aidé…" : "Il t'a aidé…", labels: ["Pas du tout", "Un peu", "Moyennement", "Beaucoup", "Énormément"],
       ask: "Qu'est-ce qui était flou ou difficile ? (facultatif)", later: "Passer",
@@ -161,15 +164,15 @@
   }
 
   /* L'étoffe : un carreau tissé par leçon, une bande par cours */
-  const unitKind = (course, u) => course === "python" ? "py" : course === "sql" ? "sq" : (u.track === "maths" ? "maths" : "ml");
-  const unitLabel = (course, u, i) => course === "python" ? `Python · leçon ${i + 1}` : course === "sql" ? `SQL · leçon ${i + 1}` : (u.track === "maths" ? `Maths ${u.num}` : `ML · module ${u.num}`);
+  const unitKind = (course, u) => course === "python" ? "py" : course === "sql" ? "sq" : course === "c" ? "cl" : (u.track === "maths" ? "maths" : "ml");
+  const unitLabel = (course, u, i) => course === "python" ? `Python · leçon ${i + 1}` : course === "sql" ? `SQL · leçon ${i + 1}` : course === "c" ? `C · leçon ${i + 1}` : (u.track === "maths" ? `Maths ${u.num}` : `ML · module ${u.num}`);
   function cellsHtml(course, opts) {
     opts = opts || {};
     const units = COURSES[course].units, st = Store.get(course), nxt = nextUnit(course);
     const started = Object.keys(st.units).length > 0 || !!st.last;
     return units.map((u, i) => {
       const done = !!(st.units[u.id] && st.units[u.id].done);
-      const motif = "motif-" + ((i * 5 + (course === "ml" ? 3 : course === "sql" ? 1 : 0)) % 6);
+      const motif = "motif-" + ((i * 5 + (course === "ml" ? 3 : course === "sql" ? 1 : course === "c" ? 4 : 0)) % 6);
       const isNext = opts.showNext !== false && started && !done && nxt && nxt.id === u.id;
       return `<a class="cell ${unitKind(course, u)} ${motif}${done ? "" : " todo"}${isNext ? " next" : ""}" style="--i:${(opts.offset || 0) + i}" href="#/${course}/${u.id}" data-cap="${esc(unitLabel(course, u, i) + " · " + u.title + (done ? " · terminé" : isNext ? " · à reprendre ici" : ""))}" aria-label="${esc(unitLabel(course, u, i) + " : " + u.title + (done ? ", terminé" : ""))}"><span class="n">${i + 1}</span></a>`;
     }).join("");
@@ -187,7 +190,7 @@
   function renderHeader() {
     const u = Store.user;
     const route = location.hash || "#/";
-    const cur = route.startsWith("#/python") ? "python" : route.startsWith("#/ml") ? "ml" : route.startsWith("#/sql") ? "sql" : "";
+    const cur = route.startsWith("#/python") ? "python" : route.startsWith("#/ml") ? "ml" : route.startsWith("#/sql") ? "sql" : route.startsWith("#/c/") || route === "#/c" ? "c" : "";
     $("#hdr").innerHTML = `
 <div class="topbar-in">
   <a class="brand" href="#/" aria-label="${esc(CFG.siteName)}, accueil"><span class="logo" aria-hidden="true">${"<i></i>".repeat(9)}</span>${brandName()}</a>
@@ -195,6 +198,7 @@
     <a href="#/python" ${cur === "python" ? 'aria-current="page"' : ""}>Python</a>
     <a href="#/ml" ${cur === "ml" ? 'aria-current="page"' : ""}>Machine Learning</a>
     <a href="#/sql" ${cur === "sql" ? 'aria-current="page"' : ""}>SQL</a>
+    <a href="#/c" ${cur === "c" ? 'aria-current="page"' : ""}>C</a>
   </nav>
   <div class="user-zone">
     <span id="save-chip" class="save-chip" hidden></span>
@@ -239,7 +243,7 @@
     if (COURSE_KEYS.includes(parts[0])) {
       await Store.load(parts[0]);
       if (!parts[1]) return pageCourse(parts[0]);
-      return parts[0] === "python" ? pagePyLesson(parts[1]) : parts[0] === "sql" ? pageSqlLesson(parts[1]) : pageMlModule(parts[1]);
+      return parts[0] === "python" ? pagePyLesson(parts[1]) : parts[0] === "sql" ? pageSqlLesson(parts[1]) : parts[0] === "c" ? pageCLesson(parts[1]) : pageMlModule(parts[1]);
     }
     pageNotFound();
   }
@@ -252,15 +256,15 @@
     setTitle("");
     if (Store.user) await Promise.all(COURSE_KEYS.map(k => Store.load(k)));
     const showProg = !Store.cloud || Store.user;
-    const pP = progressOf("python"), pM = progressOf("ml"), pS = progressOf("sql");
+    const pP = progressOf("python"), pM = progressOf("ml"), pS = progressOf("sql"), pC = progressOf("c");
     const startedOf = k => progressOf(k).done > 0 || !!Store.get(k).last;
     const started = COURSE_KEYS.filter(startedOf);
-    const total = pP.done + pM.done + pS.done;
-    const goOn = { python: "Continuer Python", ml: "Continuer le ML", sql: "Continuer SQL" };
+    const total = pP.done + pM.done + pS.done + pC.done;
+    const goOn = { python: "Continuer Python", ml: "Continuer le ML", sql: "Continuer SQL", c: "Continuer le C" };
     let ctas;
     if (Store.cloud && !Store.user) ctas = `<a class="btn primary" href="#/connexion">Créer mon compte gratuit</a><a class="btn" href="#/connexion">J'ai déjà un compte</a>`;
     else if (started.length) ctas = started.map((k, i) => `<a class="btn ${i ? "" : "primary"}" href="#/${k}/${nextUnit(k).id}">${goOn[k]}</a>`).join("");
-    else ctas = `<a class="btn primary" href="#/python/${PY_LESSONS[0].id}">Commencer par Python</a><a class="btn" href="#/sql/${SQ_LESSONS[0].id}">Commencer SQL</a><a class="btn" href="#/ml/${ML_MODS[0].id}">Commencer le ML</a>`;
+    else ctas = `<a class="btn primary" href="#/python/${PY_LESSONS[0].id}">Commencer par Python</a><a class="btn" href="#/sql/${SQ_LESSONS[0].id}">Commencer SQL</a><a class="btn" href="#/c/${C_LESSONS[0].id}">Commencer le C</a><a class="btn" href="#/ml/${ML_MODS[0].id}">Commencer le ML</a>`;
     const card = (key, kicker, list, facts) => {
       const c = COURSES[key], p = progressOf(key), started = startedOf(key);
       return `<a class="course ${key}" href="#/${key}">
@@ -279,8 +283,8 @@
 <section class="hero">
   <div class="hero-text">
     <span class="eyebrow">${esc(CFG.siteName)} · gratuit · en français</span>
-    <h1><span class="l">Apprends</span> <span class="l"><span class="t-millet">Python</span>, <span class="t-bissap">SQL</span></span> <span class="l">et l'<span class="t-indigo">IA</span>,</span> <span class="l">fil après fil.</span></h1>
-    <p class="lead">Trois parcours pour vrais débutants. Chaque notion est expliquée simplement, calculée pas à pas, puis pratiquée tout de suite. Chaque leçon terminée tisse un carreau de ton étoffe.</p>
+    <h1><span class="l">Apprends</span> <span class="l"><span class="t-millet">Python</span>, <span class="t-bissap">SQL</span>,</span> <span class="l"><span class="t-bogolan">C</span> et l'<span class="t-indigo">IA</span>,</span> <span class="l">fil après fil.</span></h1>
+    <p class="lead">Quatre parcours pour vrais débutants. Chaque notion est expliquée simplement, calculée pas à pas, puis pratiquée tout de suite. Chaque leçon terminée tisse un carreau de ton étoffe.</p>
     <div class="row">${ctas}</div>
   </div>
   <figure class="cloth-wrap" style="margin:0">
@@ -291,15 +295,18 @@
       ${cellsHtml("ml", { offset: 16 })}
       <div class="band-label"><span>Bande SQL</span><span>${showProg ? pS.done + " / " + pS.total : SQ_LESSONS.length + " leçons"}</span></div>
       ${cellsHtml("sql", { offset: 32 })}
+      <div class="band-label"><span>Bande C</span><span>${showProg ? pC.done + " / " + pC.total : C_LESSONS.length + " leçons"}</span></div>
+      ${cellsHtml("c", { offset: 48 })}
     </div>
     <figcaption class="note" id="cloth-cap"></figcaption>
-    <div class="cloth-legend"><span><i style="background:var(--millet)"></i>Python</span><span><i style="background:var(--indigo)"></i>Machine Learning</span><span><i style="background:var(--teal)"></i>Maths pour le ML</span><span><i style="background:var(--bissap)"></i>SQL</span><span><i style="background:var(--surface-2);outline:1px solid var(--line)"></i>À tisser</span></div>
+    <div class="cloth-legend"><span><i style="background:var(--millet)"></i>Python</span><span><i style="background:var(--indigo)"></i>Machine Learning</span><span><i style="background:var(--teal)"></i>Maths pour le ML</span><span><i style="background:var(--bissap)"></i>SQL</span><span><i style="background:var(--bogolan)"></i>C</span><span><i style="background:var(--surface-2);outline:1px solid var(--line)"></i>À tisser</span></div>
   </figure>
 </section>
-<section class="courses" aria-label="Les trois parcours">
+<section class="courses" aria-label="Les quatre parcours">
   ${card("python", "&gt;&gt;&gt; print(\"Bonjour\")", ["Variables, conditions, boucles, listes, fonctions", "Une console Python dans la page, rien à installer", "Exercices corrigés automatiquement", "Projet final : calculer le bulletin d'une classe"], `${PY_LESSONS.length} leçons · environ ${hours(PY_LESSONS)} h`)}
   ${card("ml", "ŷ = w · x + b", ["Les idées du ML, sans jargon", "Les maths reprises depuis le début, juste à temps", "Démos à manipuler : gradient, seuil, k-means", "Un projet complet avec scikit-learn"], `${ML_MODS.length} modules dont ${ML_MODS.filter(m => m.track === "maths").length} de maths · environ ${hours(ML_MODS)} h`)}
   ${card("sql", "SELECT * FROM clients;", ["Interroger une base : filtrer, trier, compter", "Relier les tables : JOIN, GROUP BY", "Concevoir sa base, modifier, sécuriser", "Programme aligné sur CS50 SQL (Harvard)"], `${SQ_LESSONS.length} leçons · environ ${hours(SQ_LESSONS)} h`)}
+  ${card("c", "printf(\"Bonjour\\n\");", ["Variables, conditions, boucles, fonctions", "Tableaux, chaînes, algorithmes de recherche et de tri", "Mémoire, pointeurs, malloc, listes chaînées", "Programme aligné sur CS50x (Harvard)"], `${C_LESSONS.length} leçons · environ ${hours(C_LESSONS)} h`)}
 </section>
 <section class="stack" aria-labelledby="methode">
   <h2 id="methode">Comment se déroule une leçon</h2>
@@ -374,7 +381,7 @@
 
   function pageAccount() {
     setTitle("Mon compte");
-    const p1 = progressOf("python"), p2 = progressOf("ml"), p3 = progressOf("sql");
+    const p1 = progressOf("python"), p2 = progressOf("ml"), p3 = progressOf("sql"), p4 = progressOf("c");
     app().innerHTML = `
 <section class="account">
   <h1>Mon compte</h1>
@@ -384,6 +391,7 @@
     <div><b>Python</b>${progBar(p1)}</div>
     <div><b>Machine Learning</b>${progBar(p2)}</div>
     <div><b>SQL</b>${progBar(p3)}</div>
+    <div><b>Langage C</b>${progBar(p4)}</div>
   </div>
   <form class="panel stack" id="pw-form">
     <span class="eyebrow">Changer de mot de passe</span>
@@ -818,6 +826,177 @@
       $(".schema-list", root).innerHTML = schemaHtml(ex.setup);
       setReady(true);
       try { wireExamples(); } catch (e) { /* les exemples restent lisibles sans résultat */ }
+    }, e => { show(`<span class="err">${esc(e.message)}</span>`); });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Leçon C                                                              */
+  /* ------------------------------------------------------------------ */
+  /* Rendu d'une compilation + exécution (atelier et exemples) */
+  function cRender(r) {
+    if (r.stage === "compile") {
+      return `<div class="cres-err"><b>Le programme ne compile pas.</b>${CRuntime.explain(r.errors).map(e => `<div class="cres-e"><span class="cres-l">${e.line ? "Ligne " + e.line : "Erreur"}</span> <code>${esc(e.msg)}</code>${e.code ? `<pre>${esc(e.code)}${e.caret ? "\n" + esc(e.caret) : ""}</pre>` : ""}${e.tip ? `<p>→ ${esc(e.tip)}</p>` : ""}</div>`).join("")}</div>`;
+    }
+    let h = `<pre class="cres-out">${esc(r.stdout || "")}${r.stderr ? `<span class="err">${esc(r.stderr)}</span>` : ""}</pre>`;
+    if (r.stage === "timeout") h += `<p class="cres-msg err">⏱ Arrêté après 4 secondes : le programme tourne sans fin (une boucle infinie ?).</p>`;
+    else if (!r.ok) h += `<p class="cres-msg err">Le programme a planté pendant l'exécution.</p>`;
+    else h += `<p class="cres-msg">programme terminé · code de sortie ${r.exit}</p>`;
+    return h;
+  }
+
+  function pageCLesson(id) {
+    const idx = C_LESSONS.findIndex(l => l.id === id);
+    if (idx < 0) return pageNotFound();
+    const l = C_LESSONS[idx], prev = C_LESSONS[idx - 1], next = C_LESSONS[idx + 1], ex = l.exercise;
+    Store.update("c", s => { s.last = l.id; });
+    setTitle(l.title);
+    const usesArgs = Array.isArray(ex.args);
+    app().innerHTML = `
+<div class="crumbs-bar"><a href="#/">Accueil</a><span>/</span><a href="#/c">Langage C</a><span>/</span><span>Leçon ${idx + 1}</span></div>
+<header class="lesson-head cl">
+  <span class="big-n" aria-hidden="true">${String(idx + 1).padStart(2, "0")}</span>
+  <span class="eyebrow">Partie ${l.part + 1} · ${esc(CC.parts[l.part].title)} · leçon ${idx + 1} sur ${C_LESSONS.length}</span>
+  <h1>${esc(l.title)}</h1>
+  <div class="meta"><span>≈ ${l.minutes} min</span><span>Repère CS50x : semaine ${l.cs50x} « ${esc(CC.weeks[l.cs50x])} »</span><button type="button" class="btn ghost small" data-goto-bench>↓ Aller à l'exercice</button><span id="done-tag">${isDone("c", l.id) ? "✓ Exercice réussi" : ""}</span></div>
+</header>
+<p class="objective"><b>Objectif</b>${esc(l.goal)}</p>
+<div class="py-layout">
+  <article class="py-text">
+    <div class="box why"><b class="tag">Pourquoi c'est utile</b>${l.why}</div>
+    ${l.sections.map(s => `<section class="stack"><h2 class="section-title">${esc(s.h)}</h2><div class="lesson">${s.html}</div></section>`).join("")}
+    <div class="box pitfall"><b class="tag">Erreurs fréquentes</b><ul>${l.pitfalls.map(p => `<li>${p}</li>`).join("")}</ul></div>
+    <div class="box remember"><b class="tag">L'essentiel à retenir</b><ul>${l.remember.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>
+    <section class="stack"><h2 class="section-title">Vérifie que tu as compris</h2>${quizHtml(l.quiz, "q-" + l.id)}</section>
+    <nav class="pager">${prev ? `<a class="btn" href="#/c/${prev.id}">← ${esc(prev.title)}</a>` : "<span></span>"}${next ? `<a class="btn primary" href="#/c/${next.id}">${esc(next.title)} →</a>` : `<a class="btn primary" href="#/c">Retour au sommaire</a>`}</nav>
+  </article>
+  <aside class="bench" aria-label="Atelier">
+    <div class="task"><span class="tag">Exercice</span><div>${ex.task}</div>
+      <details><summary>Un indice</summary><p>${esc(ex.hint)}</p></details>
+      <details data-sol><summary>Voir une solution</summary><p class="note">Essaie vraiment avant d'ouvrir : c'est en cherchant qu'on apprend.</p><button class="btn small" type="button" data-load-sol>Mettre la solution dans l'éditeur</button></details>
+    </div>
+    <div class="pane">
+      <div class="pane-head"><span class="t">programme.c</span><div class="row"><button class="btn small" type="button" data-act="reset">Réinitialiser</button><button class="btn small primary" type="button" data-act="run" disabled>▶ Compiler et exécuter</button><button class="btn small check" type="button" data-act="check" disabled>✓ Vérifier</button></div></div>
+      <div class="editor"><div class="gutter">1</div><textarea class="code-area" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Éditeur de code C"></textarea></div>
+      <div class="cin">
+        <label><span>Ce que tu tapes au clavier <small>(une réponse par ligne, lue par scanf)</small></span><textarea class="c-stdin" rows="2" spellcheck="false"></textarea></label>
+        ${usesArgs ? `<label><span>Arguments <small>(comme sur la ligne de commande, séparés par des espaces)</small></span><input class="c-args" spellcheck="false" autocomplete="off"></label>` : ""}
+      </div>
+      <div class="kbd">Ctrl/⌘ + Entrée pour compiler et exécuter · Tab pour indenter (4 espaces)</div>
+    </div>
+    <div class="pane term">
+      <div class="pane-head"><span class="t">Console</span><div class="row"><button class="btn small" type="button" data-act="clear">Effacer</button></div></div>
+      <div class="out cout" aria-live="polite"><span class="sys">Chargement du compilateur C…</span></div>
+    </div>
+    <div class="pyverdict" hidden></div>
+  </aside>
+</div>`;
+    const root = app();
+    wireReveals(root);
+    wireQuiz(root, l.quiz, "c", l.id);
+    wireCBench(root, l);
+    $("[data-goto-bench]", root).onclick = () => $(".bench", root).scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function wireCBench(root, l) {
+    const ex = l.exercise;
+    const code = $(".code-area", root), gutter = $(".gutter", root), out = $(".out", root), verdict = $(".pyverdict", root);
+    const stdin = $(".c-stdin", root), argsIn = $(".c-args", root);
+    const btn = a => $(`[data-act="${a}"]`, root);
+    const st = Store.get("c");
+    const draft = st.drafts[l.id];
+    code.value = draft != null ? draft : ex.start;
+    stdin.value = ex.inputs || "";
+    if (argsIn) argsIn.value = (ex.args || []).join(" ");
+    let ready = false, busy = false, saveT = null;
+    const gut = () => { gutter.textContent = Array.from({ length: code.value.split("\n").length }, (_, i) => i + 1).join("\n"); };
+    gut();
+    const save = () => { clearTimeout(saveT); saveT = setTimeout(() => Store.update("c", s => { s.drafts[l.id] = code.value; }), 600); };
+    const setCode = v => { code.value = v; gut(); save(); };
+    code.addEventListener("input", () => { gut(); save(); });
+    code.addEventListener("scroll", () => { gutter.scrollTop = code.scrollTop; });
+    code.addEventListener("keydown", e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); run(); return; }
+      if (e.key === "Tab") { e.preventDefault(); const s = code.selectionStart; code.value = code.value.slice(0, s) + "    " + code.value.slice(code.selectionEnd); code.selectionStart = code.selectionEnd = s + 4; gut(); save(); return; }
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault(); const s = code.selectionStart, ls = code.value.lastIndexOf("\n", s - 1) + 1, line = code.value.slice(ls, s);
+        let ind = line.match(/^ */)[0]; if (/\{\s*$/.test(line)) ind += "    ";
+        code.value = code.value.slice(0, s) + "\n" + ind + code.value.slice(code.selectionEnd); code.selectionStart = code.selectionEnd = s + 1 + ind.length; gut(); save();
+      }
+    });
+    const show = html => { out.innerHTML = html; out.scrollTop = 0; };
+    const setBusy = on => { busy = on; btn("run").disabled = on || !ready; btn("check").disabled = on || !ready; };
+    const argsOf = () => argsIn ? argsIn.value.trim().split(/\s+/).filter(Boolean) : [];
+    async function run() {
+      if (!ready || busy) return;
+      setBusy(true); verdict.hidden = true;
+      show(`<span class="sys">Compilation…</span>`);
+      try { show(cRender(await CRuntime.run(code.value, { stdin: stdin.value, args: argsOf() }))); }
+      catch (e) { show(`<span class="err">${esc((e && e.message) || e)}</span>`); }
+      setBusy(false);
+    }
+    async function check() {
+      if (!ready || busy) return;
+      setBusy(true); verdict.hidden = true;
+      show(`<span class="sys">Vérification…</span>`);
+      let spec = ex, res = true, n = 0, last = null, lastSpec = ex;
+      try {
+        while (spec) {
+          n++; lastSpec = spec;
+          const r = await CRuntime.run(code.value, { stdin: spec.inputs != null ? spec.inputs : ex.inputs || "", args: spec.args || ex.args || [] });
+          last = r;
+          if (r.stage === "compile") { res = "Ton programme ne compile pas : lis les erreurs dans la console."; break; }
+          if (r.stage === "timeout") { res = "Ton programme ne s'arrête pas (boucle infinie ?)."; break; }
+          if (!r.ok) { res = "Ton programme a planté pendant l'exécution."; break; }
+          const c = spec.check(r.stdout, code.value, r.exit);
+          if (c !== true) { res = n > 1 ? c + ` (essai ${n})` : c; break; }
+          spec = spec.extra;
+        }
+      } catch (e) { res = "La vérification a rencontré un problème : " + ((e && e.message) || e); }
+      if (last) show(`<span class="sys">$ vérification · essai ${n}${last.stage !== "compile" && lastSpec.inputs ? " · clavier : " + esc(String(lastSpec.inputs).replace(/\n/g, " ⏎ ")) : ""}${lastSpec.args && lastSpec.args.length ? " · arguments : " + esc(lastSpec.args.join(" ")) : ""}</span>\n` + cRender(last));
+      verdict.hidden = false;
+      if (res === true) {
+        verdict.className = "pyverdict ok"; verdict.textContent = "✓ Exercice réussi ! Leçon validée.";
+        markDone("c", l.id); const t = $("#done-tag"); if (t) t.textContent = "✓ Exercice réussi";
+        askUnit("c", l);
+      } else { verdict.className = "pyverdict no"; verdict.textContent = "✗ " + res; }
+      setBusy(false);
+    }
+    btn("run").onclick = run; btn("check").onclick = check;
+    btn("clear").onclick = () => { out.innerHTML = ""; };
+    const twoStep = (el, label, action) => {
+      const base = el.textContent; let armed = false, t = null;
+      el.onclick = () => {
+        if (!armed) { armed = true; el.textContent = label; t = setTimeout(() => { armed = false; el.textContent = base; }, 3000); return; }
+        clearTimeout(t); armed = false; el.textContent = base; action();
+      };
+    };
+    twoStep(btn("reset"), "Effacer mon code ? Cliquer encore", () => { setCode(ex.start); stdin.value = ex.inputs || ""; if (argsIn) argsIn.value = (ex.args || []).join(" "); });
+    twoStep($("[data-load-sol]", root), "Remplacer mon code ? Cliquer encore", () => setCode(ex.sol));
+    cleanup = () => { clearTimeout(saveT); Store.update("c", s => { s.drafts[l.id] = code.value; }); };
+
+    /* Les exemples de la leçon : vraiment compilés et exécutés, avec un bouton pour les reprendre dans l'éditeur */
+    async function wireExamples() {
+      for (const pre of $$("pre.cx", root)) {
+        if (!document.body.contains(pre)) return;          // l'élève a changé de page
+        const src = pre.textContent, input = pre.dataset.stdin || "", args = pre.dataset.args ? pre.dataset.args.split(/\s+/) : [];
+        const box = document.createElement("div"); box.className = "cres";
+        let r; try { r = await CRuntime.run(src, { stdin: input, args }); } catch (e) { return; }
+        box.innerHTML = `<div class="sqlres-head"><span>Résultat${input ? ` · tapé au clavier : ${esc(input.replace(/\n/g, " ⏎ "))}` : ""}${args.length ? ` · arguments : ${esc(args.join(" "))}` : ""}</span><button type="button" class="btn ghost small" data-try>Essayer dans l'éditeur</button></div>${cRender(r)}`;
+        pre.after(box);
+        const tb = $("[data-try]", box);
+        const load = () => { setCode(src); stdin.value = input; if (argsIn) argsIn.value = args.join(" "); code.focus({ preventScroll: true }); $(".bench", root).scrollIntoView({ behavior: "smooth", block: "start" }); run(); };
+        const untouched = () => !code.value.trim() || code.value.trim() === ex.start.trim() || code.value.trim() === src.trim();
+        let armed = false, t = null;
+        tb.onclick = () => {
+          if (untouched() || armed) { clearTimeout(t); armed = false; tb.textContent = "Essayer dans l'éditeur"; load(); return; }
+          armed = true; tb.textContent = "Remplacer ton code ? Cliquer encore"; t = setTimeout(() => { armed = false; tb.textContent = "Essayer dans l'éditeur"; }, 3000);
+        };
+      }
+    }
+    CRuntime.load().then(() => {
+      ready = true; setBusy(false);
+      show(`<span class="sys">Le compilateur C est prêt. Écris ton programme puis clique sur ▶ Compiler et exécuter.</span>`);
+      wireExamples();
     }, e => { show(`<span class="err">${esc(e.message)}</span>`); });
   }
 

@@ -45,6 +45,20 @@ Diapositives (PDF), vidéos, notes et code de chaque semaine, publiés par Harva
 
 > Le programme du cours Python suit *Python for Everybody* (Charles Severance, université du Michigan), sous licence CC BY 4.0. Les textes et exercices sont rédigés par CELIK Learning. CELIK Learning n'est pas affilié à l'université du Michigan.
 
+## Cours de langage C
+
+- **Cours** : CS50x, CS50's Introduction to Computer Science, semaines 1 à 5 (la partie en langage C)
+- **Établissement** : Harvard University
+- **Enseignant** : David J. Malan
+- **Site officiel** : https://cs50.harvard.edu/x/
+- **Licence** : Creative Commons BY-NC-SA 4.0 (https://cs50.harvard.edu/x/license/)
+- **Ce qui a été repris** : la progression des semaines 1 « C », 2 « Arrays », 3 « Algorithms », 4 « Memory » et 5 « Data Structures », dans le même ordre, réparties en 16 leçons (repère affiché sur chaque leçon).
+- **Différence assumée** : CS50 utilise sa bibliothèque cs50.h (get_int, get_string) pour lire au clavier ; CELIK Learning utilise scanf, du C standard.
+- **Compilateur** : xcc, de tyfkda, https://github.com/tyfkda/xcc, licence MIT. Il compile vraiment le C dans le navigateur (fichiers dans `assets/lib/xcc/`, avec un petit correctif de scanf documenté dans `assets/lib/xcc/README.txt`).
+- **Ce qui est propre à CELIK Learning** : les explications en français, les exemples (marché, tontine, guichet, répertoire), les exercices et leur correction automatique, le projet final (la file d'attente du guichet).
+
+> Le programme du cours de C suit la partie en langage C de *CS50x, CS50's Introduction to Computer Science* (Harvard University, David J. Malan), sous licence CC BY-NC-SA 4.0. Le code est compilé dans le navigateur par xcc (licence MIT). Les textes et exercices sont rédigés par CELIK Learning. CELIK Learning n'est affilié ni à Harvard, ni à CS50.
+
 ## Cours Machine Learning
 
 - **Cours principal** : 6.036 Introduction to Machine Learning, Massachusetts Institute of Technology (MIT), automne 2020
