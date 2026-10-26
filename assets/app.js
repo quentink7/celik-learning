@@ -565,7 +565,9 @@
     const code = $(".code-area", root), gutter = $(".gutter", root), out = $(".out", root), form = $(".inrow", root), stdin = $(".inrow input", root), verdict = $(".pyverdict", root);
     const btn = a => $(`[data-act="${a}"]`, root);
     const st = Store.get("python");
-    code.value = st.drafts[l.id] != null ? st.drafts[l.id] : ex.start;
+    /* Un brouillon écrit pour une ancienne version de l'exercice (staleDraft) est remplacé par le nouveau départ. */
+    const draft = st.drafts[l.id];
+    code.value = draft != null && !(ex.staleDraft && ex.staleDraft.test(draft)) ? draft : ex.start;
     let running = false, pending = null, saveT = null;
     const gut = () => { gutter.textContent = Array.from({ length: code.value.split("\n").length }, (_, i) => i + 1).join("\n"); };
     gut();

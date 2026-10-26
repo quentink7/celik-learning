@@ -236,6 +236,7 @@ print(saisie.strip().lower())   # ouagadougou</code></pre>
     { q: "Que donne \"Awa\".lower() == \"awa\" ?", options: ["True", "False"], answer: 0, explain: "lower met tout en minuscules avant la comparaison." }
   ],
   exercise: {
+    staleDraft: /FAIL root/,
     task: `Voici une ligne d'un relevé de compte : <code>ligne = "2026-10-12 08:15:03 DEPOT Awa 5000"</code>. Avec <code>split()</code>, récupère le nom et le montant, puis affiche exactement : <code>Dépôt de 5000 F par Awa</code>.`,
     hint: `champs = ligne.split() ; nom = champs[3] ; montant = champs[4] ; puis une f-string.`,
     start: `ligne = "2026-10-12 08:15:03 DEPOT Awa 5000"\n\n`,
