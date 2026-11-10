@@ -41,6 +41,18 @@
   const refOf = (course, id) => ((SRC[course] || {}).refs || {})[id];
   const isLessonCourse = c => c === "python" || c === "sql" || c === "c";   // cours en leçons (avec exercice), par opposition aux modules du ML
 
+  /* Parties et tests de fin de partie (courses/bilans-*.js) */
+  const TESTS = window.COURSE_TESTS || {};
+  const PASS = 70;   // note minimale, en %, pour réussir un quiz de module ou un test de fin de partie
+  const ML_PARTS = (window.ML_PARTS || [{ title: "Le parcours", ids: ML_MODS.map(m => m.id) }])
+    .map(p => ({ title: p.title, units: p.ids.map(id => ML_MODS.find(m => m.id === id)).filter(Boolean) }));
+  ML_PARTS.forEach((p, pi) => p.units.forEach(m => { m.part = pi; }));
+  const partsOf = course => course === "ml" ? ML_PARTS : COURSES[course].meta.parts.map(p => ({ title: p.title, units: p.lessons }));
+  const testId = pi => "bilan" + (pi + 1);
+  const testOf = (course, pi) => (TESTS[course] || [])[pi];
+  const unitWord = course => course === "ml" ? "module" : "leçon";
+  const LOCK = `<svg class="lock" viewBox="0 0 16 16" width="13" height="13" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="7" width="10" height="7" rx="1" fill="currentColor"/></svg>`;
+
   /* ------------------------------------------------------------------ */
   /* Utilitaires                                                          */
   /* ------------------------------------------------------------------ */
@@ -58,8 +70,111 @@
   function progBar(p) { return `<div class="prog"><div class="meter" role="img" aria-label="${p.pct} % terminé"><i style="width:${p.pct}%"></i></div><span>${p.done} / ${p.total}</span></div>`; }
   function markDone(course, id, extra) {
     Store.update(course, s => { const u = s.units[id] || {}; u.done = true; u.at = Date.now(); if (extra && extra.score != null) u.score = Math.max(u.score || 0, extra.score); s.units[id] = u; });
+    refreshPager();
   }
   function isDone(course, id) { const u = Store.get(course).units[id]; return !!(u && u.done); }
+
+  /* ------------------------------------------------------------------ */
+  /* Verrous et étapes                                                    */
+  /* ------------------------------------------------------------------ */
+  /* Une étape s'ouvre quand la précédente est validée ; une partie s'ouvre quand le test de la partie d'avant est réussi.
+     Tout ce qu'un élève a déjà atteint reste ouvert, même ce qu'il avait ouvert avant l'arrivée des verrous : c'est la « frontière ».
+     Elle est gardée dans une pseudo-unité « _open » (score = indice de la dernière étape atteinte + 1), parce que la fusion
+     des copies (store.js) conserve le meilleur score de chaque unité, même dans un onglet resté sur une ancienne version. */
+  const OPEN_KEY = "_open";
+  function reached(course) {
+    const st = Store.get(course); let f = -1;
+    COURSES[course].units.forEach((u, i) => {
+      const un = st.units[u.id], qz = (st.quiz || {})[u.id];
+      if ((un && (un.done || un.score)) || (st.drafts || {})[u.id] != null || (qz && Object.keys(qz).length) || st.last === u.id) f = i;
+    });
+    return f;
+  }
+  function frontier(course) {
+    const o = Store.get(course).units[OPEN_KEY];
+    return Math.max(reached(course), o && o.score ? o.score - 1 : -1);
+  }
+  function keepFrontier(course) {
+    if (Store.cloud && !Store.user) return;
+    const f = reached(course), o = Store.get(course).units[OPEN_KEY];
+    if (f + 1 > ((o && o.score) || 0)) Store.update(course, s => { s.units[OPEN_KEY] = { done: false, score: f + 1, at: Date.now() }; });
+  }
+  const partDone = (course, pi) => partsOf(course)[pi].units.every(u => isDone(course, u.id));
+  const testDone = (course, pi) => !testOf(course, pi) || isDone(course, testId(pi));
+  const testOpen = (course, pi) => partDone(course, pi);
+  function unitOpen(course, u) {
+    const units = COURSES[course].units, i = units.indexOf(u);
+    if (i <= 0 || i <= frontier(course)) return true;
+    const prev = units[i - 1];
+    return isDone(course, prev.id) && (prev.part === u.part || testDone(course, prev.part));
+  }
+  /* Les étapes d'un cours, dans l'ordre : les leçons de chaque partie, puis le test de la partie. Une étape = { unit } ou { test }. */
+  function stepsOf(course) {
+    const out = [];
+    partsOf(course).forEach((p, pi) => { p.units.forEach(u => out.push({ unit: u })); if (testOf(course, pi)) out.push({ test: pi }); });
+    return out;
+  }
+  const sameStep = (a, b) => a.unit ? a.unit === b.unit : a.test === b.test && !b.unit;
+  const stepHref = (course, s) => `#/${course}/${s.unit ? s.unit.id : testId(s.test)}`;
+  const stepLabel = (course, s) => s.unit ? s.unit.title : `Test de la partie ${s.test + 1}`;
+  const stepOpen = (course, s) => s.unit ? unitOpen(course, s.unit) : testOpen(course, s.test);
+  /* L'étape à réussir pour ouvrir une étape fermée (on remonte jusqu'à une étape ouverte). */
+  function blocker(course, s) {
+    if (s.unit) {
+      const units = COURSES[course].units, prev = units[units.indexOf(s.unit) - 1];
+      if (prev.part === s.unit.part || !testOf(course, prev.part) || !isDone(course, prev.id)) return { unit: prev };
+      return { test: prev.part };
+    }
+    return { unit: partsOf(course)[s.test].units.find(u => !isDone(course, u.id)) };
+  }
+  function firstTodo(course, s) {
+    let b = blocker(course, s), guard = 0;
+    while (!stepOpen(course, b) && guard++ < 40) b = blocker(course, b);
+    return b;
+  }
+  const testsCount = course => partsOf(course).filter((p, pi) => testOf(course, pi)).length;
+  const testsDone = course => partsOf(course).filter((p, pi) => testOf(course, pi) && isDone(course, testId(pi))).length;
+  const courseDone = course => COURSES[course].units.every(u => isDone(course, u.id)) && testsDone(course) === testsCount(course);
+  /* Où reprendre : la leçon en cours, sinon la première étape à faire (une leçon, ou un test de fin de partie). */
+  function resumeStep(course) {
+    const units = COURSES[course].units, nxt = nextUnit(course);
+    if (!isDone(course, nxt.id)) return unitOpen(course, nxt) ? { unit: nxt } : firstTodo(course, { unit: nxt });
+    const pi = partsOf(course).findIndex((p, i) => testOf(course, i) && !isDone(course, testId(i)));
+    return pi >= 0 ? { test: pi } : { unit: units[0] };
+  }
+  /* Bas de page : étape précédente, étape suivante (fermée tant que l'étape affichée n'est pas validée). */
+  let pagerCtx = null;
+  function pagerHtml(course, s) {
+    const steps = stepsOf(course), i = steps.findIndex(x => sameStep(x, s));
+    let prev = steps[i - 1]; if (prev && !stepOpen(course, prev)) prev = steps[i - 2];
+    const next = steps[i + 1];
+    const back = prev ? `<a class="btn" href="${stepHref(course, prev)}">← ${esc(stepLabel(course, prev))}</a>` : "<span></span>";
+    let fwd;
+    if (!next) fwd = `<a class="btn primary" href="#/${course}">Retour au sommaire</a>`;
+    else if (stepOpen(course, next)) fwd = `<a class="btn primary" href="${stepHref(course, next)}">${esc(stepLabel(course, next))} →</a>`;
+    else {
+      const b = firstTodo(course, next);
+      fwd = sameStep(b, s)
+        ? `<span class="btn primary locked" aria-disabled="true">${LOCK}<span>${s.unit ? (course === "ml" ? "Réussis le quiz pour ouvrir la suite" : "Réussis l'exercice pour ouvrir la suite") : "Réussis le test pour ouvrir la suite"}</span></span>`
+        : `<a class="btn primary" href="${stepHref(course, b)}">D'abord : ${esc(stepLabel(course, b))} →</a>`;
+    }
+    return `<nav class="pager" id="pager">${back}${fwd}</nav>`;
+  }
+  function setPager(course, s) { pagerCtx = { course, s }; return pagerHtml(course, s); }
+  function refreshPager() { const el = $("#pager"); if (el && pagerCtx) el.outerHTML = pagerHtml(pagerCtx.course, pagerCtx.s); }
+  /* Page d'une étape encore fermée : elle dit quoi réussir d'abord. */
+  function pageLocked(course, s) {
+    const c = COURSES[course], b = firstTodo(course, s);
+    setTitle(stepLabel(course, s));
+    app().innerHTML = `
+<div class="crumbs-bar"><a href="#/">Accueil</a><span>/</span><a href="#/${course}">${esc(c.meta.title)}</a><span>/</span><span>${esc(stepLabel(course, s))}</span></div>
+<section class="locked-page stack">
+  <span class="eyebrow">${LOCK} Étape encore fermée</span>
+  <h1>${esc(stepLabel(course, s))}</h1>
+  <p class="lead">${s.unit ? `${course === "ml" ? "Ce module" : "Cette leçon"} s'ouvre quand tu as validé ce qui précède.` : `Ce test s'ouvre quand toutes les ${unitWord(course)}s de la partie sont validées.`} Pour avancer, ${b.unit ? (course === "ml" ? "réussis d'abord le quiz de ce module" : "réussis d'abord l'exercice de cette leçon") : "réussis d'abord ce test"} :</p>
+  <div class="row"><a class="btn primary" href="${stepHref(course, b)}">${esc(stepLabel(course, b))} →</a><a class="btn" href="#/${course}">Voir le sommaire</a></div>
+</section>`;
+  }
 
   /* ------------------------------------------------------------------ */
   /* Avis des élèves : une fenêtre à la fois, focus gardé dedans, Échap = plus tard */
@@ -174,7 +289,8 @@
       const done = !!(st.units[u.id] && st.units[u.id].done);
       const motif = "motif-" + ((i * 5 + (course === "ml" ? 3 : course === "sql" ? 1 : course === "c" ? 4 : 0)) % 6);
       const isNext = opts.showNext !== false && started && !done && nxt && nxt.id === u.id;
-      return `<a class="cell ${unitKind(course, u)} ${motif}${done ? "" : " todo"}${isNext ? " next" : ""}" style="--i:${(opts.offset || 0) + i}" href="#/${course}/${u.id}" data-cap="${esc(unitLabel(course, u, i) + " · " + u.title + (done ? " · terminé" : isNext ? " · à reprendre ici" : ""))}" aria-label="${esc(unitLabel(course, u, i) + " : " + u.title + (done ? ", terminé" : ""))}"><span class="n">${i + 1}</span></a>`;
+      const open = unitOpen(course, u);
+      return `<a class="cell ${unitKind(course, u)} ${motif}${done ? "" : " todo"}${open ? "" : " locked"}${isNext ? " next" : ""}" style="--i:${(opts.offset || 0) + i}" href="#/${course}/${u.id}" data-cap="${esc(unitLabel(course, u, i) + " · " + u.title + (done ? " · terminé" : !open ? " · encore fermé" : isNext ? " · à reprendre ici" : ""))}" aria-label="${esc(unitLabel(course, u, i) + " : " + u.title + (done ? ", terminé" : !open ? ", encore fermé" : ""))}"><span class="n">${i + 1}</span></a>`;
     }).join("");
   }
   function wireCaption(root, capSel, defaultText) {
@@ -242,10 +358,94 @@
     if (parts[0] === "compte") return Store.cloud && Store.user ? pageAccount() : location.replace("#/");
     if (COURSE_KEYS.includes(parts[0])) {
       await Store.load(parts[0]);
+      keepFrontier(parts[0]);
       if (!parts[1]) return pageCourse(parts[0]);
+      const tm = /^bilan([1-9])$/.exec(parts[1]);
+      if (tm) return pageTest(parts[0], +tm[1] - 1);
       return parts[0] === "python" ? pagePyLesson(parts[1]) : parts[0] === "sql" ? pageSqlLesson(parts[1]) : parts[0] === "c" ? pageCLesson(parts[1]) : pageMlModule(parts[1]);
     }
     pageNotFound();
+  }
+  /* ------------------------------------------------------------------ */
+  /* Test de fin de partie                                                */
+  /* ------------------------------------------------------------------ */
+  function ctxHtml(ctx) {
+    return (ctx.tables || []).map(t => `<div class="ctx-t"><b>${esc(t.name)}</b><div class="table-wrap"><table><thead><tr>${t.cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${t.rows.map(r => `<tr>${r.map(v => `<td>${v === null ? `<i class="null">NULL</i>` : esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`).join("");
+  }
+  function pageTest(course, pi) {
+    const c = COURSES[course], parts = partsOf(course), part = parts[pi], t = testOf(course, pi);
+    if (!part || !t) return pageNotFound();
+    const s = { test: pi }, id = testId(pi);
+    if (!testOpen(course, pi)) return pageLocked(course, s);
+    setTitle(`Test de la partie ${pi + 1}`);
+    const qs = t.questions, need = Math.ceil(qs.length * PASS / 100), last = pi === parts.length - 1;
+    const kind = course === "python" ? "py" : course === "sql" ? "sq" : course === "c" ? "cl" : "";
+    app().innerHTML = `
+<div class="crumbs-bar"><a href="#/">Accueil</a><span>/</span><a href="#/${course}">${esc(c.meta.title)}</a><span>/</span><span>Test de la partie ${pi + 1}</span></div>
+<header class="lesson-head ${kind}">
+  <span class="big-n" aria-hidden="true">T${pi + 1}</span>
+  <span class="eyebrow">${esc(c.meta.title)} · partie ${pi + 1} · ${esc(part.title)}</span>
+  <h1>Test de fin de partie</h1>
+  <div class="meta"><span>${qs.length} questions</span><span>${need} bonnes réponses pour réussir</span><span>sans limite de temps</span><span id="test-tag"></span></div>
+</header>
+<p class="objective"><b>Règle</b>Réponds aux ${qs.length} questions, puis valide. Avec au moins ${need} bonnes réponses (${PASS} %), ${last ? "tu valides la dernière partie du parcours" : `la partie ${pi + 2} s'ouvre`}. Tu peux repasser le test autant de fois que tu veux.</p>
+${t.context ? `<aside class="box test-ctx"><b class="tag">Les données du test</b><p>${esc(t.context.text)}</p>${ctxHtml(t.context)}</aside>` : ""}
+<div id="test-zone" class="stack"></div>
+${setPager(course, s)}`;
+    const zone = $("#test-zone");
+    const paintTag = () => { const u = Store.get(course).units[id] || {}; $("#test-tag").textContent = u.done ? `✓ Test réussi · meilleur score ${u.score} %` : u.score ? `Meilleur score : ${u.score} %` : ""; };
+    function start() {
+      // Les questions sont mélangées à chaque passage.
+      const order = qs.map((_, i) => i);
+      for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const x = order[i]; order[i] = order[j]; order[j] = x; }
+      const ans = {};
+      zone.innerHTML = `<div class="quiz test-quiz">${order.map((qi, n) => { const q = qs[qi]; return `
+<div class="qcard" data-qi="${qi}">
+  <div class="qtop"><span>Question ${n + 1} / ${qs.length}</span></div>
+  <div class="qtext">${esc(q.q)}</div>
+  ${q.code ? `<pre class="qcode"><code>${esc(q.code)}</code></pre>` : ""}
+  ${q.ctx && t.context ? `<details class="qctx"><summary>Revoir les données du test</summary>${ctxHtml(t.context)}</details>` : ""}
+  <div class="opts" role="radiogroup" aria-label="Réponses à la question ${n + 1}">${q.options.map((o, j) => `<button type="button" class="opt" role="radio" aria-checked="false" data-j="${j}"><span class="l">${L[j]}</span><span>${esc(o)}</span></button>`).join("")}</div>
+  <div class="fb-slot"></div>
+</div>`; }).join("")}</div>
+<div class="panel row test-bar"><span class="note" id="test-count"></span><button class="btn primary" type="button" id="test-submit" disabled>Valider mes réponses</button></div>
+<div id="test-result" class="stack"></div>`;
+      const count = () => { const n = Object.keys(ans).length; $("#test-count").textContent = `${n} / ${qs.length} réponses données`; $("#test-submit").disabled = n < qs.length; };
+      $$(".qcard", zone).forEach(card => {
+        const qi = +card.dataset.qi;
+        $$(".opt", card).forEach(b => { b.onclick = () => {
+          ans[qi] = +b.dataset.j;
+          $$(".opt", card).forEach(x => { x.classList.toggle("picked", x === b); x.setAttribute("aria-checked", x === b ? "true" : "false"); });
+          count();
+        }; });
+      });
+      $("#test-submit").onclick = () => finish(ans);
+      count();
+    }
+    function finish(ans) {
+      const good = qs.filter((q, i) => ans[i] === q.answer).length, pct = Math.round(good / qs.length * 100), ok = good >= need;
+      if (ok) markDone(course, id, { score: pct });
+      else Store.update(course, st => { const u = st.units[id] || {}; u.score = Math.max(u.score || 0, pct); st.units[id] = u; });
+      // Réussi : on montre les bonnes réponses et les explications. Raté : seulement ce qui est faux et la leçon à relire.
+      $$(".qcard", zone).forEach(card => {
+        const qi = +card.dataset.qi, q = qs[qi], right = ans[qi] === q.answer, lu = c.units.find(u => u.id === q.lesson);
+        $$(".opt", card).forEach(b => {
+          const j = +b.dataset.j; b.disabled = true;
+          if (j === ans[qi]) b.classList.add(right ? "right" : "wrong"); else if (ok && j === q.answer) b.classList.add("right");
+        });
+        $(".fb-slot", card).innerHTML = right
+          ? `<div class="tfb ok"><span class="v">Bonne réponse</span>${ok && q.explain ? `<p>${esc(q.explain)}</p>` : ""}</div>`
+          : `<div class="tfb ko"><span class="v">${ok ? "Réponse fausse : la bonne réponse est " + L[q.answer] : "Réponse fausse"}</span>${ok ? (q.explain ? `<p>${esc(q.explain)}</p>` : "") : (lu ? `<p>À revoir : <a href="#/${course}/${lu.id}">${esc(lu.title)}</a></p>` : "")}</div>`;
+      });
+      $(".test-bar", zone).hidden = true;
+      $("#test-result").innerHTML = ok
+        ? `<div class="done-box">✓ Test réussi : ${good} / ${qs.length} (${pct} %). ${last ? (courseDone(course) ? "Parcours validé, bravo !" : "La dernière partie est validée.") : `La partie ${pi + 2} est ouverte.`}</div><div class="row"><button class="btn small" type="button" data-again>Repasser le test pour s'entraîner</button></div>`
+        : `<div class="panel score test-fail"><b>${good} / ${qs.length}</b><span class="note">Il faut ${need} bonnes réponses pour réussir. Relis les ${unitWord(course)}s indiquées sous les questions ratées, puis repasse le test. Les bonnes réponses ne sont pas affichées : à toi de les retrouver.</span><button class="btn primary" type="button" data-again>Repasser le test</button></div>`;
+      $("[data-again]", zone).onclick = () => { start(); zone.scrollIntoView({ block: "start" }); };
+      paintTag(); refreshPager();
+      $("#test-result").scrollIntoView({ block: "nearest" });
+    }
+    paintTag(); start();
   }
   function pageNotFound() { setTitle("Page introuvable"); app().innerHTML = `<div class="empty">Cette page n'existe pas. <a href="#/">Retour à l'accueil</a></div>`; }
 
@@ -255,6 +455,7 @@
   async function pageHome() {
     setTitle("");
     if (Store.user) await Promise.all(COURSE_KEYS.map(k => Store.load(k)));
+    COURSE_KEYS.forEach(keepFrontier);
     const showProg = !Store.cloud || Store.user;
     const pP = progressOf("python"), pM = progressOf("ml"), pS = progressOf("sql"), pC = progressOf("c");
     const startedOf = k => progressOf(k).done > 0 || !!Store.get(k).last;
@@ -263,7 +464,7 @@
     const goOn = { python: "Continuer Python", ml: "Continuer le ML", sql: "Continuer SQL", c: "Continuer le C" };
     let ctas;
     if (Store.cloud && !Store.user) ctas = `<a class="btn primary" href="#/connexion">Créer mon compte gratuit</a><a class="btn" href="#/connexion">J'ai déjà un compte</a>`;
-    else if (started.length) ctas = started.map((k, i) => `<a class="btn ${i ? "" : "primary"}" href="#/${k}/${nextUnit(k).id}">${goOn[k]}</a>`).join("");
+    else if (started.length) ctas = started.map((k, i) => `<a class="btn ${i ? "" : "primary"}" href="${stepHref(k, resumeStep(k))}">${goOn[k]}</a>`).join("");
     else ctas = `<a class="btn primary" href="#/python/${PY_LESSONS[0].id}">Commencer par Python</a><a class="btn" href="#/sql/${SQ_LESSONS[0].id}">Commencer SQL</a><a class="btn" href="#/c/${C_LESSONS[0].id}">Commencer le C</a><a class="btn" href="#/ml/${ML_MODS[0].id}">Commencer le ML</a>`;
     const card = (key, kicker, list, facts) => {
       const c = COURSES[key], p = progressOf(key), started = startedOf(key);
@@ -316,6 +517,7 @@
     <div><b>Pratiquer</b><span>Exercice corrigé dans la console, ou démo à manipuler.</span></div>
     <div><b>Vérifier</b><span>Quiz expliqué, questions de rappel, mots-clés à retourner.</span></div>
   </div>
+  <p class="note">Chaque leçon réussie ouvre la suivante. À la fin de chaque partie, un test de 10 questions ouvre la partie d'après : ton étoffe montre ce que tu sais vraiment faire.</p>
   <p class="quote-line">15 minutes par jour valent mieux que 3 heures le dimanche. ${showProg && total ? `Tu as déjà tissé ${total} carreau${total > 1 ? "x" : ""}.` : ""}</p>
 </section>`;
     wireCaption(app(), "#cloth-cap", "Survole un carreau pour voir la leçon ; clique pour l'ouvrir.");
@@ -414,23 +616,26 @@
   /* Sommaire d'un cours                                                  */
   /* ------------------------------------------------------------------ */
   function pageCourse(course) {
-    const c = COURSES[course], p = progressOf(course), nxt = nextUnit(course), st = Store.get(course);
+    const c = COURSES[course], p = progressOf(course), st = Store.get(course);
     setTitle(c.meta.title);
     const pad = n => String(n).padStart(2, "0");
-    let body = "";
-    if (isLessonCourse(course)) {
-      body = c.meta.parts.map((part, pi) => `
+    const parts = partsOf(course), nT = testsCount(course), go = resumeStep(course);
+    const body = parts.map((part, pi) => {
+      const rows = part.units.map(u => {
+        const n = c.units.indexOf(u) + 1, d = isDone(course, u.id), open = unitOpen(course, u), sc = (st.units[u.id] || {}).score, maths = u.track === "maths";
+        const desc = course === "ml" ? esc(u.short) + (maths ? " · prépare le module suivant" : "") : esc(u.goal);
+        const right = d ? (course === "ml" ? (sc ? `✓ quiz ${sc} %` : "✓ terminé") : "✓ réussi") : open ? (u.minutes || 30) + " min" : `${LOCK} fermé`;
+        return `<li class="${d ? "done" : ""}${maths ? " maths" : ""}${open ? "" : " locked"}"><a href="#/${course}/${u.id}"><span class="ix">${pad(n)}</span><span><span class="t">${maths ? `<span class="tagm">Maths</span>` : ""}${esc(u.title)}</span><span class="d">${desc}</span></span><span class="r">${right}</span></a></li>`;
+      }).join("");
+      const t = testOf(course, pi); let testRow = "";
+      if (t) {
+        const td = isDone(course, testId(pi)), to = testOpen(course, pi), ts = (st.units[testId(pi)] || {}).score;
+        testRow = `<li class="test${td ? " done" : ""}${to ? "" : " locked"}"><a href="#/${course}/${testId(pi)}"><span class="ix">T${pi + 1}</span><span><span class="t">Test de la partie ${pi + 1}</span><span class="d">${t.questions.length} questions sur cette partie. Il faut ${PASS} % pour ${pi + 1 < parts.length ? "ouvrir la partie " + (pi + 2) : "valider le parcours"}.</span></span><span class="r">${td ? `✓ réussi · ${ts} %` : to ? (ts ? `à repasser · ${ts} %` : "à passer") : `${LOCK} fermé`}</span></a></li>`;
+      }
+      return `
 <section class="part"><h2><span class="pn">Partie ${pi + 1}</span>${esc(part.title)}</h2>
-<ol class="units">${part.lessons.map(l => {
-        const n = c.units.indexOf(l) + 1, d = isDone(course, l.id);
-        return `<li class="${d ? "done" : ""}"><a href="#/${course}/${l.id}"><span class="ix">${pad(n)}</span><span><span class="t">${esc(l.title)}</span><span class="d">${esc(l.goal)}</span></span><span class="r">${d ? "✓ réussi" : l.minutes + " min"}</span></a></li>`;
-      }).join("")}</ol></section>`).join("");
-    } else {
-      body = `<section class="part"><h2><span class="pn">${ML_MODS.length} étapes</span>Le parcours</h2><ol class="units">${ML_MODS.map((m, i) => {
-        const d = isDone(course, m.id), sc = (st.units[m.id] || {}).score;
-        return `<li class="${d ? "done" : ""} ${m.track === "maths" ? "maths" : ""}"><a href="#/ml/${m.id}"><span class="ix">${pad(i + 1)}</span><span><span class="t">${m.track === "maths" ? `<span class="tagm">Maths</span>` : ""}${esc(m.title)}</span><span class="d">${esc(m.short)}${m.track === "maths" ? " · prépare le module suivant" : ""}</span></span><span class="r">${d ? (sc != null ? `✓ quiz ${sc} %` : "✓ terminé") : (m.minutes || 30) + " min"}</span></a></li>`;
-      }).join("")}</ol></section>`;
-    }
+<ol class="units">${rows}${testRow}</ol></section>`;
+    }).join("");
     app().innerHTML = `
 <div class="crumbs-bar"><a href="#/">Accueil</a><span>/</span><span>${esc(c.meta.title)}</span></div>
 <div class="course-page">
@@ -444,7 +649,8 @@
       <h1>${esc(c.meta.title)}</h1>
       <p class="lead">${esc(c.meta.intro)}</p>
       ${progBar(p)}
-      <div class="row"><a class="btn primary" href="#/${course}/${nxt.id}">${p.done === 0 && !st.last ? "Commencer le cours" : p.done === p.total ? "Revoir depuis le début" : "Continuer : " + esc(nxt.title)}</a></div>
+      ${nT ? `<p class="note track">${courseDone(course) ? `<b>✓ Parcours validé</b> : ${p.total} ${unitWord(course)}s et ${nT} tests réussis.` : `Tests de fin de partie réussis : <b>${testsDone(course)} / ${nT}</b>. Le parcours est validé quand les ${p.total} ${unitWord(course)}s et les ${nT} tests sont réussis.`}</p>` : ""}
+      <div class="row"><a class="btn primary" href="${stepHref(course, go)}">${p.done === 0 && !st.last ? "Commencer le cours" : courseDone(course) ? "Revoir depuis le début" : "Continuer : " + esc(stepLabel(course, go))}</a></div>
     </section>
     ${c.meta.source ? sourceBox(c.meta.source) : SRC[course] ? `<aside class="box source ${course}"><b class="tag">D'où vient ce programme</b>${SRC[course].html}</aside>` : ""}
     ${body}
@@ -521,6 +727,7 @@
     const idx = PY_LESSONS.findIndex(l => l.id === id);
     if (idx < 0) return pageNotFound();
     const l = PY_LESSONS[idx], prev = PY_LESSONS[idx - 1], next = PY_LESSONS[idx + 1], ex = l.exercise;
+    if (!unitOpen("python", l)) return pageLocked("python", { unit: l });
     Store.update("python", s => { s.last = l.id; });
     setTitle(l.title);
     const st = Store.get("python");
@@ -541,7 +748,7 @@
     <div class="box pitfall"><b class="tag">Erreurs fréquentes</b><ul>${l.pitfalls.map(p => `<li>${p}</li>`).join("")}</ul></div>
     <div class="box remember"><b class="tag">L'essentiel à retenir</b><ul>${l.remember.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>
     <section class="stack"><h2 class="section-title">Vérifie que tu as compris</h2>${quizHtml(l.quiz, "q-" + l.id)}</section>
-    <nav class="pager">${prev ? `<a class="btn" href="#/python/${prev.id}">← ${esc(prev.title)}</a>` : "<span></span>"}${next ? `<a class="btn primary" href="#/python/${next.id}">${esc(next.title)} →</a>` : `<a class="btn primary" href="#/python">Retour au sommaire</a>`}</nav>
+    ${setPager("python", { unit: l })}
   </article>
   <aside class="bench" aria-label="Atelier">
     <div class="task"><span class="tag">Exercice</span><div>${ex.task}</div>
@@ -699,6 +906,7 @@
     const idx = SQ_LESSONS.findIndex(l => l.id === id);
     if (idx < 0) return pageNotFound();
     const l = SQ_LESSONS[idx], prev = SQ_LESSONS[idx - 1], next = SQ_LESSONS[idx + 1], ex = l.exercise;
+    if (!unitOpen("sql", l)) return pageLocked("sql", { unit: l });
     Store.update("sql", s => { s.last = l.id; });
     setTitle(l.title);
     app().innerHTML = `
@@ -717,7 +925,7 @@
     <div class="box pitfall"><b class="tag">Erreurs fréquentes</b><ul>${l.pitfalls.map(p => `<li>${p}</li>`).join("")}</ul></div>
     <div class="box remember"><b class="tag">L'essentiel à retenir</b><ul>${l.remember.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>
     <section class="stack"><h2 class="section-title">Vérifie que tu as compris</h2>${quizHtml(l.quiz, "q-" + l.id)}</section>
-    <nav class="pager">${prev ? `<a class="btn" href="#/sql/${prev.id}">← ${esc(prev.title)}</a>` : "<span></span>"}${next ? `<a class="btn primary" href="#/sql/${next.id}">${esc(next.title)} →</a>` : `<a class="btn primary" href="#/sql">Retour au sommaire</a>`}</nav>
+    ${setPager("sql", { unit: l })}
   </article>
   <aside class="bench" aria-label="Atelier">
     <div class="task"><span class="tag">Exercice</span><div>${ex.task}</div>
@@ -848,6 +1056,7 @@
     const idx = C_LESSONS.findIndex(l => l.id === id);
     if (idx < 0) return pageNotFound();
     const l = C_LESSONS[idx], prev = C_LESSONS[idx - 1], next = C_LESSONS[idx + 1], ex = l.exercise;
+    if (!unitOpen("c", l)) return pageLocked("c", { unit: l });
     Store.update("c", s => { s.last = l.id; });
     setTitle(l.title);
     const usesArgs = Array.isArray(ex.args);
@@ -867,7 +1076,7 @@
     <div class="box pitfall"><b class="tag">Erreurs fréquentes</b><ul>${l.pitfalls.map(p => `<li>${p}</li>`).join("")}</ul></div>
     <div class="box remember"><b class="tag">L'essentiel à retenir</b><ul>${l.remember.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>
     <section class="stack"><h2 class="section-title">Vérifie que tu as compris</h2>${quizHtml(l.quiz, "q-" + l.id)}</section>
-    <nav class="pager">${prev ? `<a class="btn" href="#/c/${prev.id}">← ${esc(prev.title)}</a>` : "<span></span>"}${next ? `<a class="btn primary" href="#/c/${next.id}">${esc(next.title)} →</a>` : `<a class="btn primary" href="#/c">Retour au sommaire</a>`}</nav>
+    ${setPager("c", { unit: l })}
   </article>
   <aside class="bench" aria-label="Atelier">
     <div class="task"><span class="tag">Exercice</span><div>${ex.task}</div>
@@ -1016,6 +1225,7 @@
     const idx = ML_MODS.findIndex(m => m.id === id);
     if (idx < 0) return pageNotFound();
     const m = ML_MODS[idx], prev = ML_MODS[idx - 1], next = ML_MODS[idx + 1], d = m.detail || {};
+    if (!unitOpen("ml", m)) return pageLocked("ml", { unit: m });
     Store.update("ml", s => { s.last = m.id; });
     setTitle(m.title);
     const done = isDone("ml", m.id), sc = (Store.get("ml").units[m.id] || {}).score;
@@ -1053,20 +1263,28 @@ ${m.cards && m.cards.length ? `<section class="stack"><h2 class="section-title">
 ${m.feynman ? `<section class="panel stack"><h2 class="section-title">Explique-le avec tes mots</h2><p class="lesson">${esc(m.feynman.prompt)}</p><textarea aria-label="Ton explication" style="min-height:7rem" placeholder="Comme si tu l'expliquais à un ami. Si tu bloques sur un passage, c'est lui qu'il faut revoir."></textarea><button class="btn small reveal-btn" type="button" data-reveal="${k}-fey" data-show="Voir les points à ne pas oublier" data-hide="Masquer">Voir les points à ne pas oublier</button><div class="answer" id="${k}-fey" hidden><ul class="pts">${m.feynman.points.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div></section>` : ""}
 ${m.quiz && m.quiz.length ? `<section class="stack"><h2 class="section-title">Quiz du module</h2>${quizHtml(m.quiz, "mq-" + m.id)}</section>` : ""}
 <div id="finish"></div>
-<nav class="pager">${prev ? `<a class="btn" href="#/ml/${prev.id}">← ${esc(prev.title)}</a>` : "<span></span>"}${next ? `<a class="btn primary" href="#/ml/${next.id}">${esc(next.title)} →</a>` : `<a class="btn primary" href="#/ml">Retour au sommaire</a>`}</nav>
+${setPager("ml", { unit: m })}
 </div>`;
     const root = app();
     wireReveals(root);
     $$("[data-card]", root).forEach(b => b.onclick = () => { const back = $(".b", b), h = $(".hintf", b); back.hidden = !back.hidden; h.textContent = back.hidden ? "Cliquer pour retourner" : "Cliquer pour cacher"; });
     const finish = $("#finish");
+    const hasQuiz = (m.quiz || []).some(q => q.type !== "open");
     const paintFinish = pct => {
-      const dn = isDone("ml", m.id);
-      finish.innerHTML = dn ? `<div class="done-box">✓ Module terminé${pct != null ? ` · quiz ${pct} %` : ""}${next ? ` — <a href="#/ml/${next.id}">continuer avec ${esc(next.title)}</a>` : ""}</div>`
-        : `<div class="panel row" style="justify-content:space-between"><span class="note">${pct == null ? "Fais le quiz pour valider le module, ou marque-le comme terminé." : pct >= 50 ? "Quiz réussi. Tu peux valider le module." : "Score encore fragile : relis les sections ratées, ou valide quand même si tu te sens prêt."}</span><button class="btn primary" type="button" data-finish>Marquer comme terminé</button></div>`;
-      const fb = $("[data-finish]", finish); if (fb) fb.onclick = () => { markDone("ml", m.id, { score: pct }); paintFinish(pct); askUnit("ml", m); };
+      const dn = isDone("ml", m.id), steps = stepsOf("ml"), nx = steps[steps.findIndex(x => x.unit === m) + 1];
+      if (dn) finish.innerHTML = `<div class="done-box">✓ Module validé${pct ? ` · quiz ${pct} %` : ""}${nx && stepOpen("ml", nx) ? ` — <a href="${stepHref("ml", nx)}">continuer avec ${esc(stepLabel("ml", nx))}</a>` : ""}</div>`;
+      else if (hasQuiz) finish.innerHTML = `<div class="panel"><span class="note">${pct ? `Quiz : ${pct} %. Il faut au moins ${PASS} % pour valider le module. Relis les sections ratées, puis recommence le quiz.` : `Pour valider ce module et ouvrir la suite, réussis le quiz juste au-dessus : il faut au moins ${PASS} % de bonnes réponses.`}</span></div>`;
+      else {
+        finish.innerHTML = `<div class="panel row" style="justify-content:space-between"><span class="note">Ce module n'a pas de quiz : marque-le comme terminé quand tu l'as lu.</span><button class="btn primary" type="button" data-finish>Marquer comme terminé</button></div>`;
+        $("[data-finish]", finish).onclick = () => { markDone("ml", m.id); paintFinish(null); askUnit("ml", m); };
+      }
     };
-    paintFinish(sc != null ? sc : null);
-    wireQuiz(root, m.quiz || [], "ml", m.id, pct => { if (pct >= 50 && !isDone("ml", m.id)) { markDone("ml", m.id, { score: pct }); askUnit("ml", m); } else Store.update("ml", s => { const u = s.units[m.id] || {}; u.score = Math.max(u.score || 0, pct); s.units[m.id] = u; }); paintFinish(pct); });
+    paintFinish(sc || null);
+    wireQuiz(root, m.quiz || [], "ml", m.id, pct => {
+      if (pct >= PASS && !isDone("ml", m.id)) { markDone("ml", m.id, { score: pct }); askUnit("ml", m); }
+      else Store.update("ml", s => { const u = s.units[m.id] || {}; u.score = Math.max(u.score || 0, pct); s.units[m.id] = u; });
+      paintFinish(pct);
+    });
     $$(".demo-host[data-demo]", root).forEach(h => { const f = window.DEMO && window.DEMO[h.dataset.demo]; if (f) { try { f(h); } catch (e) { h.innerHTML = `<p class="note">La démo n'a pas pu s'afficher.</p>`; } } });
     if (location.hash.indexOf("#b") > 0) { /* ancre éventuelle */ }
   }

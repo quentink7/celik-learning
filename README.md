@@ -99,12 +99,25 @@ courses/sql-1.js … -4.js   les 16 leçons SQL, en 4 parties ; courses/sql.js l
 courses/sql-data.js        la base d'exemple du cours SQL (générée par tools/gen-sql-data.py)
 courses/c-1.js … -4.js     les 16 leçons de C, en 4 parties ; courses/c.js les assemble
 courses/sources.js         les cours de référence (Python, C, ML) et le repère de chaque leçon
+courses/bilans-python.js, -ml.js, -sql.js, -c.js   les tests de fin de partie (10 questions à choix par partie) ; bilans-ml.js définit aussi les 4 parties du cours ML
 tools/serve.py, tools/check-site.cjs   serveur local avec les en-têtes de sécurité, et contrôles d'avant mise en ligne
 supabase/schema.sql        la table de progression et ses règles de sécurité
 supabase/feedback.sql      la table des avis des élèves
 supabase/cours-sql.sql     à lancer une fois pour autoriser le cours SQL dans les deux tables
 supabase/cours-c.sql       à lancer une fois pour autoriser le cours C dans les deux tables
 ```
+
+### Verrous et tests de fin de partie
+Depuis le 10 novembre 2026, on avance dans l'ordre :
+
+- une leçon s'ouvre quand l'exercice de la leçon d'avant est réussi ; un module de ML s'ouvre quand le quiz du module d'avant est réussi à 70 % (3 bonnes réponses sur 4). Le bouton « Marquer comme terminé » n'existe plus ;
+- chaque cours a 4 parties. Quand toutes les leçons d'une partie sont réussies, son **test de fin de partie** s'ouvre : 10 questions à choix, mélangées à chaque passage. Avec 7 bonnes réponses, la partie suivante s'ouvre. Raté, le test montre seulement les questions fausses et la leçon à relire, pas les bonnes réponses ; on peut le repasser sans limite ;
+- un parcours est « validé » quand ses 16 leçons et ses 4 tests sont réussis ;
+- les élèves inscrits avant cette date gardent leurs leçons réussies et tout ce qu'ils avaient déjà ouvert. Pour aller plus loin, ils suivent la même règle que les autres.
+
+Une question de test : `q` (l'énoncé), `code` (facultatif), `options` (4 choix), `answer` (indice du bon choix, à partir de 0), `explain` (montré une fois le test réussi) et `lesson` (l'id de la leçon à relire, qui doit être dans la partie). Un test peut avoir un `context` (petites tables d'exemple) rappelé dans les questions marquées `ctx: true`. La note minimale est la constante `PASS` de `assets/app.js`.
+
+Les verrous sont faits dans le navigateur : ils guident l'élève, mais un élève qui s'y connaît peut les contourner. Pour un certificat officiel, il faudra une vérification côté serveur.
 
 ### Modifier ou ajouter une leçon Python
 Chaque leçon est un objet dans `courses/python-N.js` : `title`, `goal`, `why`, `sections` (titre + HTML), `pitfalls`, `remember`, `quiz` et `exercise`.

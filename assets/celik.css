@@ -507,3 +507,50 @@ p code,li code,td code,.box code,.answer,.example{overflow-wrap:anywhere}
 .cout .cres-err{background:#2A0F12; color:#FF8F86}
 .cout .cres-e pre{color:#C9CEEA}
 .cout .cres-e p{color:#F2BD2C}
+
+/* ---------- Verrous et tests de fin de partie ---------- */
+.lock{display:inline-block; flex:none; vertical-align:-.12em; margin-right:.3em}
+.cell.locked .n{opacity:.3}
+.units li.locked .t{color:var(--muted)}
+.units li.locked .ix{color:var(--line)}
+.units li.locked .r{display:inline-flex; align-items:center}
+.units li.test{background:var(--surface)}
+.units li.test a{padding-inline:.6rem}
+.units li.test .ix{font-size:1.25rem; color:var(--ink)}
+.units li.test.done .ix{color:var(--leaf)}
+.units li.test.locked .ix{color:var(--line-strong)}
+.note.track{margin:0}
+.note.track b{color:var(--ink)}
+.btn.locked{opacity:.6; cursor:not-allowed; display:inline-flex; align-items:center; text-align:left}
+.btn.locked:hover{box-shadow:none; transform:none}
+.pager .btn{max-width:48%; white-space:normal}
+@media (max-width:560px){.pager .btn{max-width:100%}}
+.locked-page{max-width:42rem; padding:1.5rem 0 3rem}
+.locked-page .eyebrow{display:inline-flex; align-items:center}
+.locked-page h1{font-size:clamp(1.8rem,4.4vw,2.6rem); font-weight:850; font-stretch:112%}
+.box.test-ctx{background:var(--surface); border:1px solid var(--line); --tagc:var(--ink)}
+.box.test-ctx > b.tag{color:var(--paper)}
+.ctx-t{display:flex; flex-direction:column; gap:.3rem; margin-top:.35rem}
+.ctx-t > b{font-family:var(--f-mono); font-size:.8125rem}
+.ctx-t table{border-collapse:collapse; font-family:var(--f-mono); font-size:.8125rem; line-height:1.4}
+.ctx-t th,.ctx-t td{padding:.25rem .7rem; border:1px solid var(--line-strong); text-align:left; white-space:nowrap}
+.ctx-t th{background:var(--surface-2); font-weight:600}
+.ctx-t .null{color:var(--muted)}
+.qcode{font-family:var(--f-mono); font-size:.875rem; line-height:1.6; background:var(--code-bg); color:var(--code-ink); border-radius:var(--r); padding:.8rem 1rem; overflow-x:auto; margin:0; tab-size:4}
+.qcode code{background:none; padding:0; font-size:inherit; color:inherit}
+.qctx summary{cursor:pointer; font-size:.875rem; color:var(--indigo); width:fit-content}
+.qctx[open] summary{margin-bottom:.4rem}
+.opt.picked{border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink)}
+.opt.picked .l{background:var(--ink); color:var(--paper)}
+.opt.picked.right{border-color:var(--leaf); box-shadow:none}
+.opt.picked.right .l{background:var(--leaf); color:#fff}
+.opt.picked.wrong{border-color:var(--madder); box-shadow:none}
+.opt.picked.wrong .l{background:var(--madder); color:#fff}
+.tfb{border-radius:var(--r); padding:.7rem .9rem; font-size:.9375rem; display:flex; flex-direction:column; gap:.3rem}
+.tfb p{margin:0}
+.tfb.ok{background:var(--leaf-soft)} .tfb.ko{background:var(--madder-soft)}
+.tfb .v{font-family:var(--f-display); font-weight:700}
+.tfb.ok .v{color:var(--leaf)} .tfb.ko .v{color:var(--madder)}
+.test-bar{justify-content:space-between; position:sticky; bottom:.5rem; z-index:5; box-shadow:0 6px 24px -12px rgba(16,20,43,.5)}
+.test-fail .note{flex:1; min-width:14rem}
+.course-head .row .btn,.locked-page .row .btn{white-space:normal; text-align:left; max-width:100%}

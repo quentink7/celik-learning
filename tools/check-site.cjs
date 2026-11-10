@@ -1,8 +1,10 @@
 // Contrôles d'avant mise en ligne, dans un vrai navigateur, avec les en-têtes de sécurité du site.
 //   1. lancer : python3 tools/serve.py 8014 --demo   (et, pour la page de connexion : python3 tools/serve.py 8015)
 //   2. puis   : PPTR=<chemin de puppeteer-core> node tools/check-site.cjs [dossier pour les captures]
-// Vérifie : 16 exercices Python et 16 exercices SQL (solution = réussi, départ = refusé), exemples SQL,
-// 16 modules ML sans erreur, aucun débordement à 390 px (clair et sombre), aucune violation CSP, aucune erreur JS.
+// Vérifie : 16 exercices Python, 16 SQL et 16 C (solution = réussi, départ = refusé), exemples SQL et C,
+// 16 modules ML sans erreur, les 16 tests de fin de partie et les verrous (leçon fermée, ouverte après l'exercice,
+// test raté puis réussi), aucun débordement à 390 px (clair et sombre), aucune violation CSP, aucune erreur JS.
+// ONLY=python,sql,c,ml,tests,layout limite les contrôles.
 const puppeteer = require(process.env.PPTR || "puppeteer-core");
 const DEMO = process.env.DEMO || "http://127.0.0.1:8014/", CLOUD = process.env.CLOUD || "http://127.0.0.1:8015/";
 const OUT = process.argv[2];
@@ -22,6 +24,14 @@ const report = (ok, line) => { if (!ok) failed = true; console.log((ok ? "✓ " 
   pg.on("console", m => { if (m.type() === "error") issues.push("console: " + m.text() + " @ " + pg.url()); });
   await pg.evaluateOnNewDocument(() => {
     window.__csp = []; try { sessionStorage.setItem("celik:fb-site-later", "1"); } catch (e) {}
+    try {   // tout ouvrir : frontière au bout de chaque cours, et les premières parties réussies pour afficher un test
+      const d = { done: true, score: 0, at: 1 }, part1 = { python: ["p01", "p02", "p03", "p04", "p05"], sql: ["s01", "s02", "s03", "s04", "s05"], ml: [], c: [] };
+      Object.keys(part1).forEach(c => {
+        const k = "celik:demo:" + c; if (localStorage.getItem(k)) return;
+        const units = { _open: { done: false, score: 16, at: 1 } }; part1[c].forEach(id => { units[id] = d; });
+        localStorage.setItem(k, JSON.stringify({ units, drafts: {}, quiz: {}, last: null, updated: 1 }));
+      });
+    } catch (e) {}
     document.addEventListener("securitypolicyviolation", e => window.__csp.push(e.violatedDirective + " ← " + (e.blockedURI || "inline")));
   });
   const csp = new Set();
@@ -136,15 +146,85 @@ const report = (ok, line) => { if (!ok) failed = true; console.log((ok ? "✓ " 
   const wide = [];
   for (const scheme of ["light", "dark"]) {
     await pg.emulateMediaFeatures([{ name: "prefers-color-scheme", value: scheme }]);
-    for (const h of ["#/", "#/python", "#/python/p16", "#/ml", "#/ml/m5", "#/ml/a6", "#/sql", "#/sql/s08", "#/sql/s16", "#/c", "#/c/c09", "#/c/c16"]) {
+    for (const h of ["#/", "#/python", "#/python/p16", "#/ml", "#/ml/m5", "#/ml/a6", "#/sql", "#/sql/s08", "#/sql/s16", "#/c", "#/c/c09", "#/c/c16", "#/python/bilan1", "#/sql/bilan1", "#/c/bilan4"]) {
       await open(DEMO + h); await wait(600);
       const w = await pg.evaluate(() => document.documentElement.scrollWidth);
       if (w > 390) wide.push(scheme + " " + h + " → " + w + "px");
     }
-    if (OUT) for (const [h, name] of [["#/ml/m5", "m5"], ["#/python/p16", "p16"], ["#/c/c08", "c08"], ["#/", "home"]]) { await open(DEMO + h); await wait(700); await pg.screenshot({ path: `${OUT}/${name}-390-${scheme}.png` }); }
+    if (OUT) for (const [h, name] of [["#/ml/m5", "m5"], ["#/python/p16", "p16"], ["#/c/c08", "c08"], ["#/", "home"], ["#/sql/bilan1", "test"], ["#/c/bilan4", "ferme"], ["#/python", "sommaire"]]) { await open(DEMO + h); await wait(700); await pg.screenshot({ path: `${OUT}/${name}-390-${scheme}.png` }); }
   }
-  report(!wide.length, "390 px : " + (wide.length ? "DÉBORDE " + wide.join(", ") : "aucun défilement horizontal (12 pages × 2 thèmes)"));
+  report(!wide.length, "390 px : " + (wide.length ? "DÉBORDE " + wide.join(", ") : "aucun défilement horizontal (15 pages × 2 thèmes)"));
   await grabCsp();
+  }
+
+  if (want("tests")) {
+  // ---------- Tests de fin de partie : contenu ----------
+  await pg.setViewport({ width: 1280, height: 900 });
+  await open(DEMO);
+  const data = await pg.evaluate(() => {
+    const T = window.COURSE_TESTS || {}, bad = []; let n = 0;
+    const partsOf = c => c === "ml" ? window.ML_PARTS.map(p => p.ids) : ({ python: window.COURSE_PYTHON, sql: window.COURSE_SQL, c: window.COURSE_C })[c].parts.map(p => p.lessons.map(l => l.id));
+    ["python", "ml", "sql", "c"].forEach(c => {
+      const parts = partsOf(c), tests = T[c] || [];
+      if (tests.length !== parts.length) bad.push(c + " : " + tests.length + " tests pour " + parts.length + " parties");
+      tests.forEach((t, pi) => {
+        if (t.questions.length !== 10) bad.push(c + " partie " + (pi + 1) + " : " + t.questions.length + " questions");
+        t.questions.forEach((q, i) => {
+          n++; const tag = c + " " + (pi + 1) + "." + (i + 1);
+          if (!q.q || !Array.isArray(q.options) || q.options.length !== 4 || new Set(q.options).size !== 4) bad.push(tag + " : options");
+          if (!(q.answer >= 0 && q.answer < 4)) bad.push(tag + " : réponse");
+          if (!q.explain) bad.push(tag + " : explication manquante");
+          if (!(parts[pi] || []).includes(q.lesson)) bad.push(tag + " : leçon " + q.lesson + " hors de la partie");
+          if (q.ctx && !t.context) bad.push(tag + " : contexte manquant");
+        });
+      });
+    });
+    return { n, bad };
+  });
+  report(!data.bad.length, `Tests de fin de partie : ${data.n} questions` + (data.bad.length ? " · ÉCARTS " + JSON.stringify(data.bad.slice(0, 8)) : " · 4 options, une bonne réponse, une explication et une leçon de la partie pour chacune"));
+
+  // ---------- Verrous : un élève neuf, dans un contexte neuf ----------
+  const ctx = await (b.createBrowserContext ? b.createBrowserContext() : b.createIncognitoBrowserContext());
+  const p2 = await ctx.newPage();
+  await p2.setViewport({ width: 1280, height: 900 });
+  p2.on("pageerror", e => issues.push("pageerror: " + e + " @ " + p2.url()));
+  await p2.evaluateOnNewDocument(() => { try { sessionStorage.setItem("celik:fb-site-later", "1"); } catch (e) {} });
+  const open2 = async h => { await p2.goto("about:blank"); await p2.goto(DEMO + h, { waitUntil: "networkidle0" }); };
+  const locked = () => p2.evaluate(() => !!document.querySelector(".locked-page"));
+  const fwd = () => p2.evaluate(() => { const el = document.querySelector("#pager").lastElementChild; return { tag: el.tagName, text: el.textContent.trim() }; });
+  const L = [];
+  await open2("#/python/p02"); L.push(["leçon 2 fermée au départ", await locked()]);
+  await open2("#/python/bilan1"); L.push(["test 1 fermé au départ", await locked()]);
+  await open2("#/ml/a1"); L.push(["module 2 fermé au départ", await locked()]);
+  await open2("#/ml/m1"); L.push(["plus de bouton « Marquer comme terminé »", await p2.evaluate(() => !document.querySelector("[data-finish]") && !!document.querySelector("#finish .panel"))]);
+  await open2("#/python/p01");
+  await p2.waitForFunction(() => { const x = document.querySelector('[data-act="check"]'); return x && !x.disabled; }, { timeout: 30000 });
+  L.push(["bas de page fermé avant l'exercice", (await fwd()).tag === "SPAN"]);
+  await p2.evaluate(() => { const l = window.COURSE_PYTHON.parts[0].lessons[0], ta = document.querySelector(".code-area"); ta.value = l.exercise.sol; ta.dispatchEvent(new Event("input", { bubbles: true })); document.querySelector('[data-act="check"]').click(); });
+  await p2.waitForFunction(() => { const v = document.querySelector(".pyverdict"); return v && !v.hidden; }, { timeout: 30000 });
+  L.push(["bas de page ouvert après l'exercice", (await fwd()).tag === "A"]);
+  await open2("#/python/p02"); L.push(["leçon 2 ouverte après l'exercice", !(await locked())]);
+  await open2("#/python/p03"); L.push(["leçon 3 toujours fermée", await locked()]);
+  // Partie 1 réussie (état posé à la main), puis le test : raté à 6 / 10, réussi à 7 / 10.
+  await p2.evaluate(() => { const d = { done: true, score: 0, at: 1 }, units = {}; ["p01", "p02", "p03", "p04", "p05"].forEach(id => { units[id] = d; }); localStorage.setItem("celik:demo:python", JSON.stringify({ units, drafts: {}, quiz: {}, last: "p05", updated: Date.now() })); });
+  await open2("#/python/p06"); L.push(["partie 2 fermée avant le test", await locked()]);
+  await open2("#/python/bilan1");
+  const answer = good => p2.evaluate(g => { const qs = window.COURSE_TESTS.python[0].questions; document.querySelectorAll("#test-zone .qcard").forEach((card, n) => { const q = qs[+card.dataset.qi]; card.querySelector(`.opt[data-j="${n < g ? q.answer : (q.answer + 1) % 4}"]`).click(); }); document.querySelector("#test-submit").click(); }, good);
+  await answer(6);
+  const fail = await p2.evaluate(() => ({ box: !!document.querySelector(".test-fail"), shown: document.querySelectorAll("#test-zone .opt.right").length, links: document.querySelectorAll("#test-zone .tfb.ko a").length }));
+  L.push(["test raté à 6 / 10, bonnes réponses cachées, 4 leçons à revoir", fail.box && fail.shown === 6 && fail.links === 4 && (await fwd()).tag === "SPAN"]);
+  await p2.evaluate(() => document.querySelector("[data-again]").click());
+  await answer(7);
+  L.push(["test réussi à 7 / 10", await p2.evaluate(() => !!document.querySelector("#test-result .done-box") && document.querySelectorAll("#test-zone .tfb p").length === 10) && (await fwd()).tag === "A"]);
+  await open2("#/python/p06"); L.push(["partie 2 ouverte après le test", !(await locked())]);
+  // Un ancien élève garde ce qu'il avait ouvert, même après être revenu en arrière.
+  await p2.evaluate(() => { const d = { done: true, score: 0, at: 1 }; localStorage.setItem("celik:demo:c", JSON.stringify({ units: { c01: d, c02: d }, drafts: {}, quiz: {}, last: "c09", updated: Date.now() })); });
+  await open2("#/c/c05"); const old1 = !(await locked());
+  await open2("#/c/c09"); const old2 = !(await locked());
+  await open2("#/c/c10"); L.push(["ancien élève : ses leçons restent ouvertes, la suite se mérite", old1 && old2 && (await locked())]);
+  const koL = L.filter(x => !x[1]).map(x => x[0]);
+  report(!koL.length, `Verrous : ${L.length} contrôles` + (koL.length ? " · ÉCHECS " + JSON.stringify(koL) : " réussis (leçon, module, test raté puis réussi, ancien élève)"));
+  await ctx.close();
   }
 
   // ---------- Page de connexion (mode connecté) ----------

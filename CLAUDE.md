@@ -63,11 +63,15 @@ Une seule table, `progress` : une ligne par élève et par cours, avec l'état c
 Forme de `state` :
 
 ```json
-{ "units":  { "p03": { "done": true, "score": 100, "at": 1760275200000 } },
+{ "units":  { "p03": { "done": true, "score": 100, "at": 1760275200000 },
+              "bilan1": { "done": true, "score": 80, "at": 1762732800000 },
+              "_open": { "done": false, "score": 6, "at": 1762732800000 } },
   "drafts": { "p03": "solde = 5000\n..." },
   "quiz":   { "p03": { "0": 1, "1": 3 } },
   "last": "p03", "updated": 1760275200000 }
 ```
+
+Dans `units`, en plus des leçons : `bilan1` à `bilan4` sont les tests de fin de partie (réussi, meilleur score), et `_open` garde la dernière étape atteinte par l'élève (`score` = son rang dans le cours), pour ne jamais refermer ce qu'il a déjà ouvert. Ces clés passent par la fusion de `store.js` comme n'importe quelle unité : aucune modification de la base n'est nécessaire.
 
 Réglages dans le tableau de bord Supabase :
 
@@ -94,6 +98,17 @@ Chaque leçon : `id` (p01…p16), `title`, `minutes`, `goal`, `why`, `sections`,
 - `courses/ml.js` : contenu de base (objectif, question « devine », sections, démos, quiz, mots-clés, « explique avec tes mots »).
 - `courses/ml-detail-1.js` à `-4.js` : approfondissement de chacune des 80 sections, rangé par id de module puis par **titre exact** de section : `plain`, `steps`, `stepsTitle`, `pitfall`, plus `intro` et `prereq` par module.
 - Un titre de section modifié dans `ml.js` doit l'être aussi dans `ml-detail-*.js`, sinon son approfondissement disparaît sans erreur.
+
+## Verrous et tests de fin de partie
+
+Ajoutés le 10 novembre 2026 à la demande de Quentin, qui avait remarqué qu'on pouvait enchaîner les leçons sans rien valider. Ses choix : verrou strict, test en QCM, et les élèves déjà inscrits gardent tout.
+
+- **Ordre imposé** : une leçon s'ouvre quand l'exercice de la précédente est réussi ; un module de ML quand le quiz du précédent atteint 70 % (le bouton « Marquer comme terminé » a été retiré).
+- **Tests** : chaque cours a 4 parties (celles du ML sont dans `courses/bilans-ml.js`). Le test d'une partie s'ouvre quand toutes ses leçons sont réussies : 10 questions à choix, mélangées, 7 bonnes réponses pour ouvrir la partie suivante. Raté : le test montre ce qui est faux et la leçon à relire, jamais la bonne réponse. Adresse : `#/python/bilan1`.
+- **Parcours validé** : 16 leçons et 4 tests réussis.
+- **Déjà inscrits** : leurs leçons réussies restent validées et tout ce qu'ils avaient ouvert reste ouvert (clé `_open`). Pour entrer dans une nouvelle partie, ils passent le test de la partie d'avant, comme tout le monde.
+- Les questions sont dans `courses/bilans-*.js` : `q`, `code`, `options`, `answer`, `explain`, `lesson`. Les réponses des questions avec du code ont été vérifiées en exécutant ce code (Python, SQLite, compilateur C).
+- Code : fonctions `unitOpen`, `stepsOf`, `firstTodo`, `pagerHtml`, `pageLocked` et `pageTest` de `assets/app.js`. Les verrous sont côté navigateur : suffisants pour guider, pas pour délivrer un certificat.
 
 ## Direction artistique : l'étoffe
 
@@ -138,4 +153,4 @@ Hors périmètre : assistant IA dans les cours, paiement. (Les nouveaux cours é
 - Pas de `confirm()` ni `alert()` : confirmations en deux clics dans la page.
 - Accessibilité : focus visible, contraste suffisant dans les deux thèmes, `prefers-reduced-motion` respecté.
 
-Avant chaque mise en ligne (`tools/check-site.cjs`, voir son en-tête) : 16 exercices Python, 16 SQL et 16 C (solution = réussi, départ = échec), 16 modules ML sans erreur, affichage à 390 px sans défilement horizontal, connexion complète avec un vrai compte.
+Avant chaque mise en ligne (`tools/check-site.cjs`, voir son en-tête) : 16 exercices Python, 16 SQL et 16 C (solution = réussi, départ = échec), 16 modules ML sans erreur, 160 questions de test bien formées, verrous (leçon fermée puis ouverte, test raté puis réussi, ancien élève), affichage à 390 px sans défilement horizontal, connexion complète avec un vrai compte.

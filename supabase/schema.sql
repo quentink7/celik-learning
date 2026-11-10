@@ -32,5 +32,6 @@ alter table public.progress add constraint progress_state_size check (pg_column_
 -- Pratique pour toi (admin) : nombre d'inscrits et de leçons terminées par cours.
 -- À lancer dans le SQL Editor quand tu veux voir tes statistiques :
 -- select course, count(*) as eleves,
---        avg((select count(*) from jsonb_each(state->'units') u where (u.value->>'done')::boolean)) as lecons_terminees_en_moyenne
+--        avg((select count(*) from jsonb_each(state->'units') u where (u.value->>'done')::boolean and u.key not like 'bilan%')) as lecons_terminees_en_moyenne,
+--        avg((select count(*) from jsonb_each(state->'units') u where (u.value->>'done')::boolean and u.key like 'bilan%')) as tests_reussis_en_moyenne
 -- from public.progress group by course;
